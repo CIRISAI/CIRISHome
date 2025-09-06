@@ -82,7 +82,7 @@ jobs:
           OPENAI_MODEL_NAME: "llama-4-scout-int4"
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results-${{ matrix.python-version }}-${{ matrix.test-type }}
@@ -117,7 +117,7 @@ jobs:
           safety check
 
       - name: Upload security reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: security-reports
@@ -247,7 +247,7 @@ jobs:
           EOF
 
       - name: Upload deployment summary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: deployment-summary
           path: deployment-summary.md
