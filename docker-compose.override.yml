@@ -1,0 +1,68 @@
+# Docker Compose Override for Development
+# Use: docker-compose up --profile dev
+
+version: '3.8'
+
+services:
+  cirishome:
+    environment:
+      - CIRIS_DEBUG=true
+      - CIRIS_LOG_LEVEL=DEBUG
+      - PYTEST_RUNNING=false
+    volumes:
+      - ./modules:/app/modules:ro
+      - ./tests:/app/tests:ro
+      - ./external:/app/external:ro
+    command: >
+      sh -c "
+        echo '🏠 Starting CIRISHome in development mode...';
+        python -m uvicorn ciris_engine.main:app --host 0.0.0.0 --port 8099 --reload
+      "
+
+  # Add test runner service
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: cirishome-tests
+    environment:
+      - CIRIS_TEST_MODE=true
+      - PYTHONPATH=/app
+      - I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY=true
+    volumes:
+      - .:/app
+      - ./tests/outputs:/app/tests/outputs
+    networks:
+      - cirishome-network
+    profiles:
+      - test
+    command: >
+      sh -c "
+        echo '🧪 Running CIRISHome test suite...';
+        pytest tests/ --tb=short -v
+      "
+
+  # Jetson Nano simulator for testing
+  jetson-simulator:
+    image: python:3.11-slim
+    container_name: jetson-sim
+    environment:
+      - FLASK_ENV=development
+    ports:
+      - "11434:11434"  # Ollama/LLM API port
+    volumes:
+      - ./scripts/jetson-simulator.py:/app/simulator.py
+    networks:
+      - cirishome-network
+    profiles:
+      - dev
+    command: >
+      sh -c "
+        pip install flask requests;
+        python /app/simulator.py
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 3

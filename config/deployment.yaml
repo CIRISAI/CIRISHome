@@ -1,0 +1,94 @@
+# CIRISHome Deployment Configuration
+# Multi-modal AI development platform configuration
+
+deployment:
+  name: "ciris-home"
+  version: "1.0.0"
+  description: "Multi-modal AI capabilities for CIRISMedical development"
+
+environment:
+  # Home Assistant Integration
+  HOME_ASSISTANT_URL: "http://localhost:8123"
+  HOME_ASSISTANT_TOKEN: "${HA_TOKEN}"
+
+  # Responsibility Acceptance
+  I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY: "false"  # Set to "true" to enable
+
+  # Multi-modal Processing
+  VISION_MODEL_PATH: "./models/vision"
+  AUDIO_MODEL_PATH: "./models/audio"
+
+  # Nest Camera Integration (WebRTC/go2rtc)
+  WEBRTC_CAMERA_URLS: "front_door:rtsp://127.0.0.1:8554/front_door,backyard:rtsp://127.0.0.1:8554/backyard,driveway:rtsp://127.0.0.1:8554/driveway"
+  GO2RTC_SERVER_URL: "http://127.0.0.1:8554"
+
+  # Hardware Configuration
+  CAMERA_DEVICE_ID: "0"
+  MICROPHONE_DEVICE_ID: "default"
+
+  # Privacy & Security
+  LOCAL_PROCESSING_ONLY: "true"
+  MEDICAL_GRADE_PRIVACY: "true"
+  AUDIT_ALL_PROCESSING: "true"
+
+  # Event Detection Settings
+  EVENT_DETECTION_SENSITIVITY: "0.7"  # 0.0-1.0 confidence threshold
+  REPLACE_GOOGLE_EVENTS: "true"  # Use local detection instead of cloud
+
+modules:
+  # Core enabler - must be first
+  - name: "home_enabler"
+    enabled: true
+    required: true
+
+  # Multi-modal capabilities
+  - name: "vision_pipeline"
+    enabled: true
+    development: true
+
+  - name: "audio_pipeline"
+    enabled: true
+    development: true
+
+  # Home Assistant integration
+  - name: "ha_integration"
+    enabled: true
+    depends_on_ha: true
+
+  # Nest camera integration
+  - name: "nest_cameras"
+    enabled: true
+    depends_on: ["webrtc_camera", "go2rtc"]
+
+  # Local event detection (replaces Google cloud)
+  - name: "event_detector"
+    enabled: true
+    depends_on: ["nest_cameras", "local_models", "vision_pipeline"]
+
+  # CIRIS Wisdom Modules (from engine)
+  - name: "geo_wisdom"
+    enabled: true
+    source: "ciris_engine"
+    description: "Geographic navigation via OpenStreetMap"
+
+  - name: "weather_wisdom"
+    enabled: true
+    source: "ciris_engine"
+    description: "Weather information via NOAA API"
+
+  - name: "sensor_wisdom"
+    enabled: true
+    source: "ciris_engine"
+    description: "Home Assistant sensor integration (medical sensors filtered)"
+
+deployment_target:
+  platform: "home_assistant"
+  runtime: "python3.11+"
+  memory_limit: "2GB"  # Lower than CIRISAgent's 4GB target
+  storage: "10GB"
+
+compliance:
+  purpose: "Development platform for medical multi-modal capabilities"
+  privacy_level: "medical_grade"
+  data_retention: "local_only"
+  audit_required: true

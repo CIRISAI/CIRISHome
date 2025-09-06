@@ -1,0 +1,40 @@
+{
+  "module": {
+    "name": "ha_integration",
+    "version": "1.0.0",
+    "description": "Enhanced Home Assistant integration with CIRIS multi-modal capabilities",
+    "author": "CIRISHome Team"
+  },
+  "services": [{
+    "type": "COMMUNICATION",
+    "priority": "MEDIUM",
+    "class": "ha_integration.service.HAIntegrationService",
+    "capabilities": [
+      "ha_chat_bridge",
+      "ha_device_control",
+      "ha_automation_trigger",
+      "ha_sensor_data",
+      "provider:home_assistant"
+    ],
+    "metadata": {
+      "domain": "home_automation",
+      "platform": "home_assistant",
+      "integration_type": "websocket_api"
+    }
+  }],
+  "requirements": {
+    "env_vars": [
+      "HOME_ASSISTANT_URL",
+      "HOME_ASSISTANT_TOKEN"
+    ]
+  },
+  "metadata": {
+    "purpose": "Bridge between CIRIS capabilities and existing Home Assistant installation",
+    "features": [
+      "Enhanced chat integration",
+      "Multi-modal sensor data",
+      "Automation triggers",
+      "Device state management"
+    ]
+  }
+}

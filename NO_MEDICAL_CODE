@@ -1,0 +1,17 @@
+CIRIS HOME - NO MEDICAL CODE MARKER
+
+This file indicates that CIRISHome contains NO medical diagnosis, treatment,
+or clinical decision-making code.
+
+CIRISHome is a multi-modal AI development platform that:
+- Develops vision, audio, and sensor fusion capabilities
+- Tests integration with Home Assistant
+- Provides foundation technology for CIRISMedical
+- Contains NO medical logic or patient data processing
+
+Medical capabilities are implemented exclusively in the separate,
+private CIRISMedical repository which requires medical licensing.
+
+Date: 2025-09-06
+Purpose: Development platform for multi-modal AI capabilities
+Status: Public repository - safe for general use

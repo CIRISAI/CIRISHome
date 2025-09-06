@@ -1,0 +1,38 @@
+# CIRISHome Testing Requirements
+
+# Core pytest framework
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.11.0
+pytest-cov>=4.1.0
+
+# Async testing
+aiohttp>=3.8.5
+aiofiles>=23.0.0
+
+# Test utilities
+freezegun>=1.2.2
+responses>=0.23.0
+faker>=19.0.0
+
+# Mock and testing tools
+pillow>=10.0.0
+numpy>=1.24.0
+
+# Optional performance testing
+pytest-benchmark>=4.0.0
+memory-profiler>=0.61.0
+
+# Code quality and pre-commit
+pre-commit>=3.6.0
+black>=23.12.0
+isort>=5.13.0
+flake8>=6.1.0
+flake8-docstrings>=1.7.0
+pylint>=3.0.0
+mypy>=1.8.0
+bandit>=1.7.5
+
+# Ecosystem-specific testing
+pytest-mock>=3.11.0
+aioresponses>=0.7.4

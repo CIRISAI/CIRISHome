@@ -1,0 +1,10 @@
+{
+  "name": "CIRIS Home - Multi-modal AI Platform",
+  "render_readme": true,
+  "domains": ["conversation", "tts", "stt", "camera", "sensor"],
+  "iot_class": "Local Polling",
+  "homeassistant": "2023.1.0",
+  "documentation": "https://github.com/CIRISAI/CIRISHome/blob/main/README.md",
+  "issue_tracker": "https://github.com/CIRISAI/CIRISHome/issues",
+  "content_in_root": false
+}

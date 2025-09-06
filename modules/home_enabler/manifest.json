@@ -1,0 +1,25 @@
+{
+  "module": {
+    "name": "home_enabler",
+    "version": "1.0.0",
+    "description": "Enables home automation capabilities in CIRIS engine",
+    "author": "CIRISHome Team",
+    "priority": "STARTUP",
+    "critical": true
+  },
+  "hooks": {
+    "post_startup": "home_enabler.service.enable_home_capabilities"
+  },
+  "requirements": {
+    "env_vars": [
+      "HOME_ASSISTANT_URL",
+      "HOME_ASSISTANT_TOKEN",
+      "I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY"
+    ]
+  },
+  "metadata": {
+    "warning": "HOME AUTOMATION SOFTWARE - Multi-modal capabilities enabled",
+    "privacy": "Local processing with medical-grade privacy protection",
+    "purpose": "Development platform for CIRISMedical multi-modal capabilities"
+  }
+}

@@ -1,0 +1,201 @@
+# Home Assistant Automations using CIRISHome Local Event Detection
+# Replace Google Nest cloud events with 100% local processing
+
+# Example 1: Person at Front Door (replaces Google Nest person detection)
+automation:
+  - alias: "CIRIS: Person at Front Door"
+    description: "Local person detection at front door camera"
+    trigger:
+      platform: event
+      event_type: ciris_camera_event
+      event_data:
+        type: camera_person
+        device_id: camera_front_door
+    condition:
+      - condition: numeric_state
+        entity_id: sensor.front_door_confidence
+        above: 0.8
+    action:
+      - service: notify.mobile_app_phone
+        data:
+          title: "🚪 Person at Front Door"
+          message: "{{ trigger.event.data.description }}"
+          data:
+            tag: "front_door_person"
+            channel: "Security"
+            importance: high
+      - service: light.turn_on
+        target:
+          entity_id: light.porch_light
+        data:
+          brightness_pct: 100
+      - service: camera.snapshot
+        target:
+          entity_id: camera.front_door
+        data:
+          filename: "/config/www/snapshots/person_{{ now().strftime('%Y%m%d_%H%M%S') }}.jpg"
+
+  # Example 2: Vehicle Detection (replaces Google Nest vehicle detection)
+  - alias: "CIRIS: Vehicle in Driveway"
+    description: "Local vehicle detection in driveway camera"
+    trigger:
+      platform: event
+      event_type: ciris_camera_event
+      event_data:
+        type: camera_vehicle
+        device_id: camera_driveway
+    action:
+      - service: notify.persistent_notification
+        data:
+          title: "🚗 Vehicle Detected"
+          message: "Vehicle seen in driveway: {{ trigger.event.data.description }}"
+      - if:
+          - condition: state
+            entity_id: binary_sensor.garage_door
+            state: "off"  # closed
+        then:
+          - service: cover.open_cover
+            target:
+              entity_id: cover.garage_door
+
+  # Example 3: Package Detection (replaces Google Nest package detection)
+  - alias: "CIRIS: Package Delivery"
+    description: "Local package detection at front door"
+    trigger:
+      platform: event
+      event_type: ciris_camera_event
+      event_data:
+        type: camera_package
+    action:
+      - service: notify.all_devices
+        data:
+          title: "📦 Package Delivered"
+          message: "Package detected: {{ trigger.event.data.description }}"
+      - service: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.package_waiting
+      - service: tts.speak
+        target:
+          entity_id: media_player.living_room_speaker
+        data:
+          message: "A package has been delivered to your front door"
+
+  # Example 4: Animal Detection (replaces Google Nest animal detection)
+  - alias: "CIRIS: Animal in Yard"
+    description: "Local animal detection in backyard"
+    trigger:
+      platform: event
+      event_type: ciris_camera_event
+      event_data:
+        type: camera_animal
+        device_id: camera_backyard
+    action:
+      - service: notify.mobile_app_phone
+        data:
+          title: "🐾 Animal Detected"
+          message: "{{ trigger.event.data.description }} in backyard"
+          data:
+            tag: "backyard_animal"
+      - service: switch.turn_on
+        target:
+          entity_id: switch.sprinkler_system
+        # Gentle deterrent for wildlife
+
+  # Example 5: Multi-Camera Activity Monitoring
+  - alias: "CIRIS: Unusual Activity Alert"
+    description: "High-confidence activity across multiple cameras"
+    trigger:
+      platform: event
+      event_type: ciris_camera_event
+      event_data:
+        type: camera_activity
+    condition:
+      - condition: numeric_state
+        value_template: "{{ trigger.event.data.confidence }}"
+        above: 0.9
+    action:
+      - service: notify.security_team
+        data:
+          title: "⚠️ High-Confidence Activity"
+          message: >
+            Unusual activity detected on {{ trigger.event.data.device_id }}:
+            {{ trigger.event.data.description }}
+            Confidence: {{ (trigger.event.data.confidence * 100) | round(1) }}%
+
+# Sensor Templates for Event Data
+template:
+  - sensor:
+      - name: "Front Door Detection Confidence"
+        unique_id: "front_door_confidence"
+        state: >
+          {% set events = state_attr('sensor.ciris_events', 'events') | default([]) %}
+          {% set latest = events | selectattr('device_id', 'eq', 'camera_front_door') | list | first %}
+          {{ latest.confidence if latest else 0 }}
+        unit_of_measurement: "%"
+        device_class: None
+
+      - name: "Total CIRIS Events Today"
+        unique_id: "ciris_events_today"
+        state: >
+          {% set events = state_attr('sensor.ciris_events', 'events') | default([]) %}
+          {% set today = now().strftime('%Y-%m-%d') %}
+          {{ events | selectattr('timestamp', 'match', today) | list | length }}
+        unit_of_measurement: "events"
+
+# Binary Sensors for Active Detection
+binary_sensor:
+  - platform: template
+    sensors:
+      person_at_door:
+        friendly_name: "Person at Door"
+        value_template: >
+          {% set last_event = states('sensor.last_ciris_event_type') %}
+          {% set last_time = states('sensor.last_ciris_event_time') %}
+          {% set minutes_ago = (as_timestamp(now()) - as_timestamp(last_time)) / 60 %}
+          {{ last_event == 'camera_person' and minutes_ago < 5 }}
+        device_class: occupancy
+
+      package_waiting:
+        friendly_name: "Package Waiting"
+        value_template: >
+          {% set last_event = states('sensor.last_ciris_event_type') %}
+          {{ last_event == 'camera_package' and is_state('input_boolean.package_collected', 'off') }}
+        device_class: None
+
+# Dashboard Card Configuration
+lovelace:
+  dashboards:
+    ciris-security:
+      mode: yaml
+      title: "CIRIS Local Security"
+      icon: mdi:shield-home
+      show_in_sidebar: true
+      filename: ciris_security.yaml
+
+# Example Dashboard Card (ciris_security.yaml)
+views:
+  - title: "Local Camera Events"
+    icon: mdi:cctv
+    cards:
+      - type: history-graph
+        title: "CIRIS Event Detection"
+        hours_to_show: 24
+        entities:
+          - binary_sensor.person_at_door
+          - binary_sensor.package_waiting
+          - sensor.total_ciris_events_today
+
+      - type: logbook
+        title: "Recent CIRIS Events"
+        entities:
+          - sensor.ciris_events
+        hours_to_show: 6
+
+      - type: entities
+        title: "Detection Status"
+        show_header_toggle: false
+        entities:
+          - sensor.front_door_detection_confidence
+          - sensor.total_ciris_events_today
+          - binary_sensor.person_at_door
+          - binary_sensor.package_waiting

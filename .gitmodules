@@ -1,0 +1,3 @@
+[submodule "external/ciris-engine"]
+	path = external/ciris-engine
+	url = https://github.com/CIRISAI/CIRISAgent.git

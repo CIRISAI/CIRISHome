@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # CIRISHome on Home Assistant Yellow
+  cirishome:
+    build:
+      context: ./homeassistant-ciris
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE:-}
+        BUILD_REF: ${BUILD_REF:-}
+    container_name: cirishome-addon
+    environment:
+      - JETSON_NANO_IP=${JETSON_NANO_IP:-192.168.1.100}
+      - JETSON_NANO_PORT=${JETSON_NANO_PORT:-11434}
+      - HA_TOKEN=${HA_TOKEN}
+      - RESPONSIBILITY_ACCEPTED=${RESPONSIBILITY_ACCEPTED:-false}
+      - LOCAL_PROCESSING_ONLY=true
+      - MEDICAL_GRADE_PRIVACY=true
+      - OPENAI_API_KEY=jetson-local-llm
+      - OPENAI_API_BASE=http://${JETSON_NANO_IP:-192.168.1.100}:${JETSON_NANO_PORT:-11434}/v1
+      - OPENAI_MODEL_NAME=${LLM_MODEL:-llama-4-scout-int4}
+    ports:
+      - "8099:8099"  # CIRIS engine port
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - cirishome-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8099/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Development/testing only - Home Assistant simulator
+  homeassistant-dev:
+    image: homeassistant/home-assistant:stable
+    container_name: ha-dev
+    environment:
+      - TZ=America/New_York
+    ports:
+      - "8123:8123"
+    volumes:
+      - ha-config:/config
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - cirishome-network
+    restart: unless-stopped
+    profiles:
+      - dev
+
+volumes:
+  ha-config:
+
+networks:
+  cirishome-network:
+    driver: bridge

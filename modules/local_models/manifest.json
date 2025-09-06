@@ -1,0 +1,100 @@
+{
+  "module": {
+    "name": "local_models",
+    "version": "1.0.0",
+    "description": "100% local model loading and management for Jetson Orin Nano",
+    "author": "CIRISHome Team",
+    "priority": "STARTUP",
+    "critical": true
+  },
+  "services": [{
+    "type": "LLM",
+    "priority": "HIGH",
+    "class": "local_models.service.LocalLLMService",
+    "capabilities": [
+      "call_llm_structured",
+      "analyze_images",
+      "multi_image_reasoning",
+      "visual_question_answering",
+      "object_localization",
+      "scene_understanding",
+      "provider:llama_scout_local"
+    ],
+    "metadata": {
+      "domain": "home_automation",
+      "model": "llama-4-scout-int4",
+      "provider": "local_jetson",
+      "offline": true,
+      "multimodal": true,
+      "max_images": 8,
+      "vision_capabilities": ["image_grounding", "visual_reasoning", "temporal_understanding"]
+    }
+  }, {
+    "type": "TOOL",
+    "priority": "HIGH",
+    "class": "local_models.service.LocalSTTService",
+    "capabilities": [
+      "speech_to_text",
+      "provider:whisper_local"
+    ],
+    "metadata": {
+      "domain": "home_automation",
+      "model": "whisper-large-v3",
+      "provider": "local_jetson",
+      "offline": true
+    }
+  }, {
+    "type": "TOOL",
+    "priority": "HIGH",
+    "class": "local_models.service.LocalTTSService",
+    "capabilities": [
+      "text_to_speech",
+      "provider:coqui_local"
+    ],
+    "metadata": {
+      "domain": "home_automation",
+      "model": "coqui-tts",
+      "provider": "local_jetson",
+      "offline": true
+    }
+  }, {
+    "type": "TOOL",
+    "priority": "HIGH",
+    "class": "local_models.service.LocalIntentsService",
+    "capabilities": [
+      "classify_intent",
+      "extract_entities",
+      "provider:intent_local"
+    ],
+    "metadata": {
+      "domain": "home_automation",
+      "model": "distilbert-intent-classifier",
+      "provider": "local_jetson",
+      "offline": true
+    }
+  }],
+  "requirements": {
+    "env_vars": [
+      "JETSON_GPU_ENABLED",
+      "LOCAL_MODELS_PATH",
+      "CUDA_VISIBLE_DEVICES"
+    ],
+    "hardware": [
+      "jetson_orin_nano",
+      "cuda_gpu",
+      "8gb_ram_minimum"
+    ]
+  },
+  "metadata": {
+    "purpose": "100% local AI processing - no cloud dependencies",
+    "models_required": [
+      "llama-4-scout-int4 (4GB quantized from 17B)",
+      "whisper-large-v3 (1.5GB)",
+      "coqui-tts (500MB)",
+      "distilbert-intent (250MB)"
+    ],
+    "total_model_size": "~6.25GB with quantization",
+    "gpu_memory": "6-7GB recommended",
+    "privacy": "Complete offline processing - nothing leaves the device"
+  }
+}
