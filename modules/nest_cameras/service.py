@@ -1,5 +1,5 @@
 """
-Nest Camera Service - Access Nest cameras via WebRTC/go2rtc integration
+Nest Camera Service - Access Nest cameras via WebRTC/go2rtc integration.
 
 Integrates with Home Assistant's WebRTC Camera custom component and go2rtc
 server to provide multi-modal vision processing for Nest cameras.
@@ -9,7 +9,6 @@ import asyncio
 import logging
 import os
 from typing import Any, Dict, List, Optional
-from urllib.parse import urlparse
 
 import cv2
 import numpy as np
@@ -18,19 +17,21 @@ logger = logging.getLogger(__name__)
 
 
 class NestCameraService:
-    """Service for accessing Nest cameras via WebRTC/go2rtc"""
+    """Service for accessing Nest cameras via WebRTC/go2rtc."""
 
     def __init__(self):
+        """Initialize the Nest camera service."""
         self.go2rtc_url = os.getenv("GO2RTC_SERVER_URL", "http://127.0.0.1:8554")
         self.camera_urls = self._parse_camera_urls()
         self.active_streams = {}
 
     def _parse_camera_urls(self) -> Dict[str, str]:
-        """Parse camera URLs from environment variable"""
+        """Parse camera URLs from environment variable."""
         urls_env = os.getenv("WEBRTC_CAMERA_URLS", "")
         camera_urls = {}
 
-        # Expected format: "front_door:rtsp://127.0.0.1:8554/front_door,backyard:rtsp://127.0.0.1:8554/backyard"
+        # Expected format: "front_door:rtsp://127.0.0.1:8554/front_door,
+        # backyard:rtsp://127.0.0.1:8554/backyard"
         if urls_env:
             for camera_def in urls_env.split(","):
                 if ":" in camera_def:
@@ -41,7 +42,7 @@ class NestCameraService:
         return camera_urls
 
     async def get_camera_stream(self, camera_name: str) -> Optional[str]:
-        """Get RTSP stream URL for a specific camera"""
+        """Get RTSP stream URL for a specific camera."""
         if camera_name not in self.camera_urls:
             logger.error(f"Camera {camera_name} not found in configuration")
             return None
@@ -51,15 +52,16 @@ class NestCameraService:
         return stream_url
 
     async def get_available_cameras(self) -> List[str]:
-        """Get list of available camera names"""
+        """Get list of available camera names."""
         return list(self.camera_urls.keys())
 
     async def analyze_camera_feed(
         self, camera_name: str, duration_seconds: int = 10
     ) -> Dict[str, Any]:
         """
-        Analyze camera feed for motion detection and object recognition
-        Uses OpenCV with Jetson GPU acceleration when available
+        Analyze camera feed for motion detection and object recognition.
+
+        Uses OpenCV with Jetson GPU acceleration when available.
         """
         stream_url = await self.get_camera_stream(camera_name)
         if not stream_url:
@@ -109,7 +111,8 @@ class NestCameraService:
                     if non_zero_count > motion_threshold:
                         analysis_results["motion_detected"] = True
                         logger.debug(
-                            f"Motion detected in {camera_name}: {non_zero_count} pixels changed"
+                            f"Motion detected in {camera_name}: "
+                            f"{non_zero_count} pixels changed"
                         )
 
                 previous_frame = gray.copy()
@@ -132,8 +135,9 @@ class NestCameraService:
 
     async def detect_motion(self, camera_name: str, sensitivity: float = 0.5) -> bool:
         """
-        Quick motion detection on camera feed
-        Returns True if motion detected in last few seconds
+        Quick motion detection on camera feed.
+
+        Returns True if motion detected in last few seconds.
         """
         analysis = await self.analyze_camera_feed(camera_name, duration_seconds=3)
         return analysis.get("motion_detected", False)
@@ -142,8 +146,9 @@ class NestCameraService:
         self, camera_name: str, num_frames: int = 5
     ) -> List[np.ndarray]:
         """
-        Extract specific number of frames from camera feed
-        Useful for multi-modal analysis with vision pipeline
+        Extract specific number of frames from camera feed.
+
+        Useful for multi-modal analysis with vision pipeline.
         """
         stream_url = await self.get_camera_stream(camera_name)
         if not stream_url:
@@ -173,7 +178,7 @@ class NestCameraService:
         return frames
 
     async def get_camera_status(self) -> Dict[str, Any]:
-        """Get status of all configured cameras"""
+        """Get status of all configured cameras."""
         status = {
             "go2rtc_server": self.go2rtc_url,
             "total_cameras": len(self.camera_urls),

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Grace Home - Multi-Modal Development Companion
+Grace Home - Multi-Modal Development Companion.
 
 Development companion tool for CIRISHome multi-modal AI development.
 Provides safety checks, testing, and development workflow support.
@@ -8,12 +8,11 @@ Provides safety checks, testing, and development workflow support.
 
 import argparse
 import subprocess
-import sys
 from pathlib import Path
 
 
 def status():
-    """Check multi-modal pipeline health"""
+    """Check multi-modal pipeline health."""
     print("🏠 CIRISHome Multi-Modal Status")
     print("=" * 40)
 
@@ -29,7 +28,7 @@ def status():
             print("✅ CIRISAgent submodule: Ready")
         else:
             print("❌ CIRISAgent submodule: Not found")
-    except:
+    except subprocess.SubprocessError:
         print("❌ Git submodule check failed")
 
     # Check modules
@@ -48,7 +47,7 @@ def status():
 
 
 def morning():
-    """Start development session with safety checks"""
+    """Start development session with safety checks."""
     print("🌅 Good morning! Starting CIRISHome development session")
     print("Running medical-grade safety checks...")
 
@@ -69,7 +68,7 @@ def morning():
 
 
 def vision():
-    """Check vision development readiness"""
+    """Check vision development readiness."""
     print("📹 Vision Development Environment")
     print("• Nest cameras (WebRTC/go2rtc): Ready for development")
     print("• OpenCV with GPU support: Available")
@@ -78,7 +77,7 @@ def vision():
 
 
 def audio():
-    """Check audio development readiness"""
+    """Check audio development readiness."""
     print("🎤 Audio Development Environment")
     print("• Voice PE puck integration: Available")
     print("• Audio processing tools: Ready")
@@ -87,7 +86,7 @@ def audio():
 
 
 def ha():
-    """Check Home Assistant development environment"""
+    """Check Home Assistant development environment."""
     print("🏠 Home Assistant Development Environment")
     print("• Integration foundation: Available")
     print("• Development tools: Ready")
@@ -96,7 +95,7 @@ def ha():
 
 
 def medical():
-    """Check CIRISMedical compatibility"""
+    """Check CIRISMedical compatibility."""
     print("🏥 Checking CIRISMedical Compatibility")
     print("• Multi-modal capabilities: Ready")
     print("• Medical-grade privacy: Verified")
@@ -106,7 +105,7 @@ def medical():
 
 
 def dev():
-    """Check development environment health"""
+    """Check development environment health."""
     print("🛠️  Development Environment Health")
     print("• Code quality tools: Available")
     print("• Testing framework: Ready")
@@ -116,14 +115,14 @@ def dev():
 
 
 def night():
-    """End development session"""
+    """End development session."""
     print("🌙 End of development session")
     print("Multi-modal home automation advancing...")
     print("Cameras, mics, sensors working together. Rest well!")
 
 
 def cameras():
-    """Check camera development readiness"""
+    """Check camera development readiness."""
     print("📷 Camera Development Environment")
     print("• Nest camera access via WebRTC/go2rtc: Available")
     print("• Multi-modal processing foundation: Ready")
@@ -132,6 +131,7 @@ def cameras():
 
 
 def main():
+    """Run the grace_home command-line tool."""
     parser = argparse.ArgumentParser(
         description="Grace Home - Multi-Modal Development Companion"
     )

@@ -1,16 +1,14 @@
 """
-Local Models Service - 100% offline AI processing on Jetson Orin Nano
+Local Models Service - 100% offline AI processing on Jetson Orin Nano.
 
 Loads and manages STT, TTS, intents, and LLM models locally for complete
 privacy and no cloud dependencies.
 """
 
-import asyncio
-import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List
 
 import torch
 
@@ -18,30 +16,31 @@ logger = logging.getLogger(__name__)
 
 
 class LocalModelManager:
-    """Central manager for all local models"""
+    """Central manager for all local models."""
 
     def __init__(self):
+        """Initialize the local model manager."""
         self.models_path = Path(os.getenv("LOCAL_MODELS_PATH", "./models"))
         self.jetson_gpu = os.getenv("JETSON_GPU_ENABLED", "true").lower() == "true"
         self.device = self._setup_device()
         self.loaded_models = {}
 
     def _setup_device(self) -> str:
-        """Configure GPU/CPU device for Jetson Orin Nano"""
+        """Configure GPU/CPU device for Jetson Orin Nano."""
         if self.jetson_gpu and torch.cuda.is_available():
             # Jetson Orin Nano specific optimizations
             device = "cuda:0"
             torch.backends.cudnn.benchmark = True
             logger.info(
-                f"🚀 Jetson GPU acceleration enabled: {torch.cuda.get_device_name(0)}"
+                f"Jetson GPU acceleration enabled: {torch.cuda.get_device_name(0)}"
             )
         else:
             device = "cpu"
-            logger.warning("⚠️  Running on CPU - performance will be limited")
+            logger.warning("Running on CPU - performance will be limited")
         return device
 
     def get_model_info(self) -> Dict[str, Any]:
-        """Get information about available models and memory usage"""
+        """Get information about available models and memory usage."""
         if torch.cuda.is_available():
             gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)
             gpu_allocated = torch.cuda.memory_allocated(0) / (1024**3)
@@ -61,7 +60,7 @@ class LocalModelManager:
 
 
 class LocalLLMService:
-    """Local LLM service using llama-4-scout"""
+    """Local LLM service using llama-4-scout."""
 
     def __init__(self):
         self.manager = LocalModelManager()

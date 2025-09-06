@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-CIRISHome - Multi-modal AI Development Platform
+CIRISHome - Multi-modal AI Development Platform.
 
 Startup script for CIRISHome multi-modal capabilities development.
 Uses CIRISAgent as the core engine with home automation modules.
@@ -16,7 +16,10 @@ sys.path.insert(0, str(Path(__file__).parent / "external" / "ciris-engine"))
 
 
 def main():
-    parser = argparse.ArgumentParser(description="CIRISHome Multi-modal AI Platform")
+    """Run CIRISHome platform."""
+    parser = argparse.ArgumentParser(
+        description="CIRISHome Multi-modal AI Platform"
+    )
 
     # Adapter selection
     parser.add_argument(
@@ -43,15 +46,21 @@ def main():
         "--dev-mode", action="store_true", help="Run in development mode"
     )
     parser.add_argument(
-        "--mock-ha", action="store_true", help="Use mock Home Assistant for testing"
+        "--mock-ha",
+        action="store_true",
+        help="Use mock Home Assistant for testing",
     )
 
     # Multi-modal options
     parser.add_argument(
-        "--enable-vision", action="store_true", help="Enable vision processing pipeline"
+        "--enable-vision",
+        action="store_true",
+        help="Enable vision processing pipeline",
     )
     parser.add_argument(
-        "--enable-audio", action="store_true", help="Enable audio processing pipeline"
+        "--enable-audio",
+        action="store_true", 
+        help="Enable audio processing pipeline",
     )
 
     # Standard CIRIS options
@@ -74,20 +83,20 @@ def main():
     if args.dev_mode:
         os.environ["DEV_MODE"] = "true"
         os.environ["I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY"] = "true"
-        print("🏠 Development mode enabled - home automation capabilities active")
+        print("Development mode enabled - home automation capabilities active")
 
     if args.mock_ha:
         os.environ["MOCK_HOME_ASSISTANT"] = "true"
-        print("🔧 Mock Home Assistant enabled")
+        print("Mock Home Assistant enabled")
 
     # Enable multi-modal processing
     if args.enable_vision:
         os.environ["ENABLE_VISION_PIPELINE"] = "true"
-        print("📹 Vision processing enabled")
+        print("Vision processing enabled")
 
     if args.enable_audio:
         os.environ["ENABLE_AUDIO_PIPELINE"] = "true"
-        print("🎤 Audio processing enabled")
+        print("Audio processing enabled")
 
     # Import and run CIRIS engine with our modules
     try:
@@ -96,7 +105,8 @@ def main():
         print(f"Home Assistant: {args.ha_url}")
 
         # Set module path for our home modules
-        os.environ["CIRIS_MODULES_PATH"] = str(Path(__file__).parent / "modules")
+        modules_path = str(Path(__file__).parent / "modules")
+        os.environ["CIRIS_MODULES_PATH"] = modules_path
 
         # Import and delegate to CIRISAgent main
         from ciris_engine.main import main as ciris_main
@@ -117,9 +127,9 @@ def main():
             sys.argv = original_argv
 
     except KeyboardInterrupt:
-        print("\n🏠 CIRISHome shutdown requested")
+        print("\nCIRISHome shutdown requested")
     except Exception as e:
-        print(f"❌ CIRISHome startup failed: {e}")
+        print(f"CIRISHome startup failed: {e}")
         if args.dev_mode:
             import traceback
 

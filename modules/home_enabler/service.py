@@ -7,7 +7,6 @@ This enables the prohibited home automation capabilities in WiseBus.
 
 import logging
 import os
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,8 @@ def enable_home_capabilities():
 
     if responsibility_accepted != "true":
         logger.warning(
-            "I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY not set to 'true' - some features limited"
+            "I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY not set to 'true' - "
+            "some features limited"
         )
 
     # Import WiseBus and enable home automation capabilities
@@ -54,11 +54,12 @@ def enable_home_capabilities():
         WiseBus.PROHIBITED_CAPABILITIES = current_prohibited - home_prohibited
 
         logger.info(
-            "🏠 HOME AUTOMATION ENABLED - Multi-modal capabilities active. "
-            f"HA URL: {ha_url}, Token: {'SET' if ha_token else 'NOT SET'}"
+            "HOME AUTOMATION ENABLED - Multi-modal capabilities active. "
+            "HA URL: %s, Token: %s", ha_url, 'SET' if ha_token else 'NOT SET'
         )
         logger.info(
-            "Home automation and multi-modal processing enabled for CIRISMedical development"
+            "Home automation and multi-modal processing enabled for "
+            "CIRISHome development"
         )
 
         return True

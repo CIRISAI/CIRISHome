@@ -1,5 +1,5 @@
 """
-Local Event Detection Service
+Local Event Detection Service.
 
 Replaces Google Nest cloud event detection with 100% local processing using
 Llama-4-Scout vision capabilities and Jetson GPU acceleration.
@@ -11,10 +11,12 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 
 import aiohttp
+
 import cv2
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -22,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class DetectionEvent:
-    """Represents a detected event"""
+    """Represents a detected event."""
 
     event_type: str
     camera_name: str
@@ -34,9 +36,10 @@ class DetectionEvent:
 
 
 class LocalEventDetectionService:
-    """Local event detection service using Llama-4-Scout vision"""
+    """Local event detection service using Llama-4-Scout vision."""
 
     def __init__(self):
+        """Initialize the local event detection service."""
         self.ha_url = os.getenv("HOME_ASSISTANT_URL", "http://localhost:8123")
         self.ha_token = os.getenv("HOME_ASSISTANT_TOKEN")
         self.sensitivity = float(os.getenv("EVENT_DETECTION_SENSITIVITY", "0.7"))
@@ -58,7 +61,7 @@ class LocalEventDetectionService:
         }
 
     async def initialize(self):
-        """Initialize event detection service"""
+        """Initialize event detection service."""
         try:
             # Get references to other services
             from modules.local_models.service import LocalLLMService
@@ -87,7 +90,7 @@ class LocalEventDetectionService:
             return False
 
     async def start_camera_detection(self, camera_name: str):
-        """Start event detection for a specific camera"""
+        """Start event detection for a specific camera."""
         if camera_name in self.detection_tasks:
             logger.warning(f"Detection already running for {camera_name}")
             return
@@ -97,15 +100,15 @@ class LocalEventDetectionService:
         self.detection_tasks[camera_name] = task
 
     async def stop_camera_detection(self, camera_name: str):
-        """Stop event detection for a specific camera"""
+        """Stop event detection for a specific camera."""
         if camera_name in self.detection_tasks:
             self.detection_tasks[camera_name].cancel()
             del self.detection_tasks[camera_name]
             logger.info(f"Stopped event detection for camera: {camera_name}")
 
     async def _detection_loop(self, camera_name: str):
-        """Main detection loop for a camera"""
-        logger.info(f"🔍 Starting detection loop for {camera_name}")
+        """Run main detection loop for a camera."""
+        logger.info(f"Starting detection loop for {camera_name}")
 
         previous_frame = None
         last_detection_time = {}
@@ -131,14 +134,14 @@ class LocalEventDetectionService:
 
                 # If motion detected or periodic check, analyze with Llama-4-Scout
                 current_time = datetime.now()
+                time_since_last = (
+                    current_time - max(last_detection_time.values(),
+                                       default=datetime.min)
+                ).seconds
                 should_analyze = (
-                    motion_detected
-                    or not last_detection_time
-                    or (
-                        current_time
-                        - max(last_detection_time.values(), default=datetime.min)
-                    ).seconds
-                    > 30
+                    motion_detected or
+                    not last_detection_time or
+                    time_since_last > 30
                 )
 
                 if should_analyze:
@@ -153,7 +156,7 @@ class LocalEventDetectionService:
                             await self._send_ha_event(event)
                             last_detection_time[event.event_type] = current_time
                             logger.info(
-                                f"🚨 Event detected: {event.event_type} on {camera_name}"
+                                f"Event detected: {event.event_type} on {camera_name}"
                             )
 
                 previous_frame = current_frame.copy()
@@ -167,7 +170,7 @@ class LocalEventDetectionService:
                 await asyncio.sleep(5)  # Wait before retrying
 
     def _detect_motion(self, prev_frame: np.ndarray, curr_frame: np.ndarray) -> bool:
-        """Fast motion detection using frame difference"""
+        """Fast motion detection using frame difference."""
         try:
             # Convert to grayscale
             prev_gray = cv2.cvtColor(prev_frame, cv2.COLOR_BGR2GRAY)
@@ -192,7 +195,7 @@ class LocalEventDetectionService:
     async def _analyze_frame_with_llama(
         self, camera_name: str, frames: List[np.ndarray]
     ) -> List[DetectionEvent]:
-        """Analyze camera frames using Llama-4-Scout vision"""
+        """Analyze camera frames using Llama-4-Scout vision."""
         if not self.llm_service:
             return []
 
@@ -285,7 +288,7 @@ class LocalEventDetectionService:
             return []
 
     async def _send_ha_event(self, event: DetectionEvent):
-        """Send event to Home Assistant"""
+        """Send event to Home Assistant."""
         if not self.ha_token:
             logger.warning("No Home Assistant token configured")
             return
@@ -319,7 +322,7 @@ class LocalEventDetectionService:
                 ) as response:
                     if response.status == 200:
                         logger.info(
-                            f"✅ Sent {event.event_type} event to Home Assistant"
+                            f"Sent {event.event_type} event to Home Assistant"
                         )
                         self.event_history.append(event)
 
@@ -333,7 +336,7 @@ class LocalEventDetectionService:
             logger.error(f"Failed to send Home Assistant event: {e}")
 
     async def get_event_history(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """Get recent event history"""
+        """Get recent event history."""
         recent_events = self.event_history[-limit:] if limit else self.event_history
 
         return [
@@ -349,7 +352,7 @@ class LocalEventDetectionService:
         ]
 
     async def get_detection_status(self) -> Dict[str, Any]:
-        """Get status of event detection system"""
+        """Get status of event detection system."""
         return {
             "active_cameras": len(self.detection_tasks),
             "camera_names": list(self.detection_tasks.keys()),

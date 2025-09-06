@@ -1,9 +1,7 @@
-"""
-Tests for the complete voice processing pipeline.
-"""
+"""Tests for the complete voice processing pipeline."""
 
 import asyncio
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -16,7 +14,6 @@ class TestVoicePipeline:
         self, mock_jetson, mock_homeassistant, sample_audio
     ):
         """Test complete voice interaction flow from audio to response."""
-
         # 1. STT - Convert audio to text
         stt_result = await mock_jetson.transcribe(sample_audio)
 
@@ -48,7 +45,6 @@ class TestVoicePipeline:
         self, mock_jetson, mock_homeassistant, service_calls
     ):
         """Test voice command that controls home devices."""
-
         calls, add_call = service_calls
 
         # Mock service call in HA
@@ -85,14 +81,15 @@ class TestVoicePipeline:
     @pytest.mark.asyncio
     async def test_camera_vision_query(self, mock_jetson, sample_image):
         """Test voice query about camera vision."""
-
         # Voice query about camera
         query = "What do you see on the front door camera?"
 
         # Mock vision-enabled LLM response
         mock_jetson.generate = AsyncMock(
             return_value={
-                "response": "I can see a person standing at the front door with a package.",
+                "response": (
+                    "I can see a person standing at the front door with a package."
+                ),
                 "vision_analysis": {
                     "objects_detected": ["person", "package", "door"],
                     "confidence_scores": [0.95, 0.87, 0.99],
@@ -114,7 +111,6 @@ class TestVoicePipeline:
     @pytest.mark.asyncio
     async def test_wisdom_integration(self, mock_wisdom_modules):
         """Test integration with wisdom modules."""
-
         # Test weather query
         weather = await mock_wisdom_modules.weather.current("Anytown, NY")
         assert weather["temperature"] is not None
@@ -136,7 +132,6 @@ class TestVoicePipeline:
     @pytest.mark.asyncio
     async def test_pipeline_error_handling(self, mock_jetson, sample_audio):
         """Test error handling in pipeline."""
-
         # Test STT failure
         mock_jetson.transcribe = AsyncMock(
             side_effect=Exception("STT service unavailable")
@@ -162,13 +157,12 @@ class TestVoicePipeline:
     @pytest.mark.asyncio
     async def test_pipeline_latency(self, mock_jetson, sample_audio):
         """Test pipeline meets latency requirements."""
-
         start_time = asyncio.get_event_loop().time()
 
         # Complete pipeline
         stt_result = await mock_jetson.transcribe(sample_audio)
         llm_result = await mock_jetson.generate(f"Query: {stt_result['text']}")
-        tts_result = await mock_jetson.synthesize(llm_result["response"])
+        await mock_jetson.synthesize(llm_result["response"])
 
         end_time = asyncio.get_event_loop().time()
         total_latency = end_time - start_time
@@ -185,7 +179,7 @@ class TestVoicePipeline:
             llm_result = await mock_jetson.generate(
                 f"Request {request_id}: {stt_result['text']}"
             )
-            tts_result = await mock_jetson.synthesize(llm_result["response"])
+            await mock_jetson.synthesize(llm_result["response"])
             return {"id": request_id, "success": True}
 
         # Process 3 concurrent requests
@@ -207,7 +201,6 @@ class TestWyomingProtocol:
 
     def test_wyoming_message_format(self, wyoming_messages):
         """Test Wyoming protocol message formats."""
-
         # Info message
         info_msg = wyoming_messages["info"]
         assert info_msg["type"] == "info"
@@ -228,7 +221,6 @@ class TestWyomingProtocol:
     @pytest.mark.asyncio
     async def test_wyoming_communication(self, mock_wyoming, wyoming_messages):
         """Test Wyoming protocol communication flow."""
-
         # Connect to Wyoming server
         await mock_wyoming.connect()
         mock_wyoming.connect.assert_called_once()
@@ -259,7 +251,6 @@ class TestWyomingProtocol:
 
     def test_voice_pe_device_config(self, voice_pe_devices):
         """Test Voice PE device configuration."""
-
         assert len(voice_pe_devices) >= 2
 
         for device in voice_pe_devices:
@@ -274,7 +265,6 @@ class TestPrivacyCompliance:
 
     def test_local_processing_only(self, env_vars):
         """Test that all processing is local."""
-
         # Environment should specify local processing
         assert env_vars["LOCAL_PROCESSING_ONLY"] == "true"
         assert env_vars["MEDICAL_GRADE_PRIVACY"] == "true"
@@ -285,7 +275,6 @@ class TestPrivacyCompliance:
 
     def test_medical_sensor_blocking(self, medical_entities):
         """Test that medical sensors are blocked."""
-
         medical_keywords = ["heart_rate", "blood_pressure", "medical", "patient"]
 
         def is_medical_blocked(entity):
@@ -302,12 +291,10 @@ class TestPrivacyCompliance:
 
     def test_responsibility_acceptance_required(self, env_vars):
         """Test that home automation responsibility is accepted."""
-
         assert env_vars["I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY"] == "true"
 
     def test_audit_trail_available(self):
         """Test that interactions can be audited."""
-
         # Simulate audit trail
         interaction_log = {
             "timestamp": "2024-01-01T12:00:00Z",
