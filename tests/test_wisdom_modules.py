@@ -1,8 +1,6 @@
-"""
-Tests for CIRIS wisdom module integration.
-"""
+"""Tests for CIRIS wisdom module integration."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -296,7 +294,10 @@ class TestWisdomIntegration:
         combined_info = {
             "location": location,
             "current_weather": weather,
-            "context": f"Weather at {location.get('address', 'location')} is {weather.get('conditions', 'unknown')}",
+            "context": (
+                f"Weather at {location.get('address', 'location')} is "
+                f"{weather.get('conditions', 'unknown')}"
+            ),
         }
 
         assert "location" in combined_info

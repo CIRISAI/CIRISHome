@@ -69,7 +69,7 @@ class LocalLLMService:
         self.model_name = "llama-4-scout-int4"
 
     async def initialize(self):
-        """Load the LLM model"""
+        """Load the LLM model."""
         try:
             model_path = self.manager.models_path / "llm" / self.model_name
 
@@ -121,7 +121,7 @@ class LocalLLMService:
     async def call_llm_structured(
         self, messages: List[Dict], response_model=None, images: List = None, **kwargs
     ) -> Dict[str, Any]:
-        """Generate structured response using local LLM"""
+        """Generate structured response using local LLM."""
         if not self.model:
             await self.initialize()
 
@@ -147,7 +147,7 @@ class LocalLLMService:
                 )
 
             response = self.tokenizer.decode(
-                outputs[0][inputs.input_ids.shape[-1] :], skip_special_tokens=True
+                outputs[0][inputs.input_ids.shape[-1]:], skip_special_tokens=True
             )
 
             return {
@@ -162,7 +162,7 @@ class LocalLLMService:
             return {"error": str(e)}
 
     def _format_messages(self, messages: List[Dict]) -> str:
-        """Format messages for llama chat format"""
+        """Format messages for llama chat format."""
         formatted = ""
         for msg in messages:
             role = msg.get("role", "user")
@@ -172,7 +172,7 @@ class LocalLLMService:
         return formatted
 
     def _format_multimodal_messages(self, messages: List[Dict], images: List) -> str:
-        """Format multimodal messages with images for Llama-4-Scout"""
+        """Format multimodal messages with images for Llama-4-Scout."""
         formatted = ""
 
         # Add images first (up to 8 images supported)
@@ -193,7 +193,7 @@ class LocalLLMService:
     async def analyze_images(
         self, images: List, question: str = "Describe what you see in these images"
     ) -> Dict[str, Any]:
-        """Analyze images using Llama-4-Scout vision capabilities"""
+        """Analyze images using Llama-4-Scout vision capabilities."""
         if not images:
             return {"error": "No images provided"}
 
@@ -208,25 +208,34 @@ class LocalLLMService:
     async def visual_question_answering(
         self, images: List, question: str
     ) -> Dict[str, Any]:
-        """Answer questions about images"""
+        """Answer questions about images."""
         return await self.analyze_images(images, question)
 
     async def object_localization(
         self, images: List, objects: List[str]
     ) -> Dict[str, Any]:
-        """Locate specific objects in images"""
+        """Locate specific objects in images."""
         objects_str = ", ".join(objects)
-        question = f"Locate and describe the position of these objects in the images: {objects_str}. Use image grounding to be precise about locations."
+        question = (
+            f"Locate and describe the position of these objects in the "
+            f"images: {objects_str}. Use image grounding to be precise "
+            f"about locations."
+        )
         return await self.analyze_images(images, question)
 
     async def scene_understanding(self, images: List) -> Dict[str, Any]:
-        """Understand the overall scene and context"""
-        question = "Analyze these images and provide a detailed understanding of the scene, including: 1) What room or location this appears to be, 2) What activities might be happening, 3) Any notable objects or people, 4) The overall context and situation."
+        """Understand the overall scene and context."""
+        question = (
+            "Analyze these images and provide a detailed understanding of the "
+            "scene, including: 1) What room or location this appears to be, "
+            "2) What activities might be happening, 3) Any notable objects or "
+            "people, 4) The overall context and situation."
+        )
         return await self.analyze_images(images, question)
 
 
 class LocalSTTService:
-    """Local Speech-to-Text using Whisper"""
+    """Local Speech-to-Text using Whisper."""
 
     def __init__(self):
         self.manager = LocalModelManager()
@@ -234,7 +243,7 @@ class LocalSTTService:
         self.processor = None
 
     async def initialize(self):
-        """Load Whisper model"""
+        """Load Whisper model."""
         try:
             import whisper
 
@@ -256,7 +265,7 @@ class LocalSTTService:
             return False
 
     async def speech_to_text(self, audio_data: bytes) -> Dict[str, Any]:
-        """Convert speech to text"""
+        """Convert speech to text."""
         if not self.model:
             await self.initialize()
 
@@ -278,14 +287,14 @@ class LocalSTTService:
 
 
 class LocalTTSService:
-    """Local Text-to-Speech using Coqui TTS"""
+    """Local Text-to-Speech using Coqui TTS."""
 
     def __init__(self):
         self.manager = LocalModelManager()
         self.tts = None
 
     async def initialize(self):
-        """Load TTS model"""
+        """Load TTS model."""
         try:
             from TTS.api import TTS
 
@@ -302,7 +311,7 @@ class LocalTTSService:
             return False
 
     async def text_to_speech(self, text: str, voice: str = "default") -> bytes:
-        """Convert text to speech"""
+        """Convert text to speech."""
         if not self.tts:
             await self.initialize()
 
@@ -322,7 +331,7 @@ class LocalTTSService:
 
 
 class LocalIntentsService:
-    """Local intent classification and entity extraction"""
+    """Local intent classification and entity extraction."""
 
     def __init__(self):
         self.manager = LocalModelManager()
@@ -330,7 +339,7 @@ class LocalIntentsService:
         self.tokenizer = None
 
     async def initialize(self):
-        """Load intent classification model"""
+        """Load intent classification model."""
         try:
             from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
@@ -352,7 +361,7 @@ class LocalIntentsService:
             return False
 
     async def classify_intent(self, text: str) -> Dict[str, Any]:
-        """Classify user intent from text"""
+        """Classify user intent from text."""
         # Simplified intent classification
         # In production, use a proper trained intent model
 
@@ -381,7 +390,7 @@ class LocalIntentsService:
         }
 
     def _extract_entities(self, text: str) -> Dict[str, Any]:
-        """Extract entities from text"""
+        """Extract entities from text."""
         # Simplified entity extraction
         entities = {}
 

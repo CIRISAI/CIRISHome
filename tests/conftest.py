@@ -1,18 +1,16 @@
 """
 CIRISHome pytest configuration and global fixtures.
-Using established patterns from Home Assistant, ESPHome, and Wyoming protocol ecosystems.
+
+Using established patterns from Home Assistant, ESPHome, and Wyoming
+protocol ecosystems.
 """
 
 import asyncio
-import json
-import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-import pytest_asyncio
 
 # Import ecosystem fixtures when available
 try:
@@ -61,7 +59,10 @@ def env_vars(monkeypatch, ciris_home_config):
     """Set up environment variables for testing."""
     env_vars = {
         "OPENAI_API_KEY": "test-jetson-key",
-        "OPENAI_API_BASE": f"http://{ciris_home_config['jetson_nano_ip']}:{ciris_home_config['jetson_nano_port']}/v1",
+        "OPENAI_API_BASE": (
+            f"http://{ciris_home_config['jetson_nano_ip']}:"
+            f"{ciris_home_config['jetson_nano_port']}/v1"
+        ),
         "OPENAI_MODEL_NAME": ciris_home_config["llm_model"],
         "HOME_ASSISTANT_URL": "http://homeassistant.local:8123",
         "HOME_ASSISTANT_TOKEN": ciris_home_config["ha_token"],
@@ -160,17 +161,23 @@ def medical_entities():
 def sample_audio():
     """Sample audio data for testing."""
     # Mock WAV file header + data
-    return (
-        b"RIFF$\x08\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x80>\x00\x00\x00}\x00\x00\x02\x00\x10\x00data\x00\x08\x00\x00"
-        + b"\x00" * 1000
+    # Mock WAV file header + data
+    wav_header = (
+        b"RIFF$\x08\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00"
+        b"\x80>\x00\x00\x00}\x00\x00\x02\x00\x10\x00data\x00\x08\x00\x00"
     )
+    return wav_header + b"\x00" * 1000
 
 
 @pytest.fixture
 def sample_image():
     """Sample image data for testing."""
     # Simple PNG data
-    return b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d\x00\x00\x00d\x08\x06\x00\x00\x00p\xe2\x95D"
+    png_data = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00d"
+        b"\x00\x00\x00d\x08\x06\x00\x00\x00p\xe2\x95D"
+    )
+    return png_data
 
 
 # ============================================================================
@@ -560,7 +567,7 @@ def jetson_gpu_info():
 
 @pytest.fixture
 def quantized_model_config():
-    """Configuration for quantized models on Jetson."""
+    """Provide configuration for quantized models on Jetson."""
     return {
         "model_name": "llama-4-scout-int4",
         "quantization": "int4",

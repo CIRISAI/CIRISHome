@@ -1,10 +1,6 @@
-"""
-Tests for the home_enabler module - critical capability override functionality.
-"""
+"""Tests for the home_enabler module - critical capability override functionality."""
 
-import os
-import sys
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -74,7 +70,8 @@ class TestHomeEnabler:
 
                 # Should log warning about missing responsibility acceptance
                 mock_logger.warning.assert_called_with(
-                    "I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY not set to 'true' - some features limited"
+                    "I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY not set to "
+                    "'true' - some features limited"
                 )
 
     def test_function_enables_capabilities(self, env_vars):
@@ -147,10 +144,12 @@ class TestCapabilityFiltering:
 
             # Simulate the logging that should happen
             logger.info(
-                "Enabling home automation capabilities - user has accepted responsibility"
+                "Enabling home automation capabilities - user has "
+                "accepted responsibility"
             )
             logger.info(
-                "Removed 2 home automation restrictions from WiseBus.PROHIBITED_CAPABILITIES"
+                "Removed 2 home automation restrictions from "
+                "WiseBus.PROHIBITED_CAPABILITIES"
             )
 
             # Verify logging occurred

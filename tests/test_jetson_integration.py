@@ -1,8 +1,6 @@
-"""
-Tests for Jetson Nano integration and local AI processing.
-"""
+"""Tests for Jetson Nano integration and local AI processing."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -92,13 +90,7 @@ class TestJetsonIntegration:
     def test_model_specifications(self, jetson_responses):
         """Test that Jetson models meet specifications."""
 
-        # Expected models on Jetson
-        expected_models = {
-            "llama-4-scout-int4": {"size": "~4GB", "type": "LLM", "vision": True},
-            "whisper-large-v3": {"size": "~1.5GB", "type": "STT"},
-            "coqui-tts": {"size": "~500MB", "type": "TTS"},
-            "distilbert-intent": {"size": "~250MB", "type": "INTENT"},
-        }
+        # Test model specifications are handled by response validation below
 
         # Verify response formats match expectations
         stt_response = jetson_responses["stt"]

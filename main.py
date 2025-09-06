@@ -59,7 +59,7 @@ def main():
     )
     parser.add_argument(
         "--enable-audio",
-        action="store_true", 
+        action="store_true",
         help="Enable audio processing pipeline",
     )
 

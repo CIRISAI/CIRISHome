@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """
-Jetson Nano Simulator for CIRISHome Development
-Simulates the Ollama/LLM API for testing without real hardware
+Jetson Nano Simulator for CIRISHome Development.
+Simulates the Ollama/LLM API for testing without real hardware.
 """
 
-import json
 import random
 import time
 
@@ -32,13 +31,13 @@ MOCK_RESPONSES = {
 
 @app.route("/api/tags", methods=["GET"])
 def list_models():
-    """List available models"""
+    """List available models."""
     return jsonify({"models": list(MOCK_MODELS.values())})
 
 
 @app.route("/api/generate", methods=["POST"])
 def generate():
-    """Generate LLM response"""
+    """Generate LLM response."""
     data = request.json
     prompt = data.get("prompt", "").lower()
 
@@ -74,7 +73,7 @@ def generate():
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    """Chat endpoint (alternative API)"""
+    """Chat endpoint (alternative API)."""
     data = request.json
     messages = data.get("messages", [])
 
@@ -105,7 +104,7 @@ def chat():
 
 @app.route("/health", methods=["GET"])
 def health():
-    """Health check endpoint"""
+    """Health check endpoint."""
     return jsonify(
         {
             "status": "healthy",

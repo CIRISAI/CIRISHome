@@ -1,6 +1,4 @@
-"""
-Tests for medical sensor filtering - critical safety functionality.
-"""
+"""Tests for medical sensor filtering - critical safety functionality."""
 
 from typing import Any, Dict
 
@@ -334,21 +332,24 @@ class TestMedicalSensorFiltering:
         # Sensors that should NOT be flagged as medical
         legitimate_sensors = [
             {
-                "entity_id": "sensor.greenhouse_temperature",  # Contains 'heart' but not medical
+                # Contains 'heart' but not medical
+                "entity_id": "sensor.greenhouse_temperature",
                 "attributes": {
                     "friendly_name": "Greenhouse Temp",
                     "device_class": "temperature",
                 },
             },
             {
-                "entity_id": "sensor.weighbridge_sensor",  # Contains 'weigh' but not medical weight
+                # Contains 'weigh' but not medical weight
+                "entity_id": "sensor.weighbridge_sensor",
                 "attributes": {
                     "friendly_name": "Truck Scale",
                     "device_class": "weight",
                 },
             },
             {
-                "entity_id": "sensor.hearth_temperature",  # Contains 'heart' but fireplace
+                # Contains 'heart' but fireplace
+                "entity_id": "sensor.hearth_temperature",
                 "attributes": {
                     "friendly_name": "Fireplace Temp",
                     "device_class": "temperature",
