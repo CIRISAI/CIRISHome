@@ -299,18 +299,15 @@ def mock_homeassistant(sample_entities: List[Dict[str, Any]]) -> Mock:
 
 
 @pytest.fixture
-def service_calls() -> Mock:
+def service_calls() -> tuple[List[Dict[str, Any]], Any]:
     """Track Home Assistant service calls."""
-    calls = []
+    calls: List[Dict[str, Any]] = []
 
     def add_call(domain: str, service: str, **kwargs: Any) -> Dict[str, bool]:
         calls.append({"domain": domain, "service": service, "data": kwargs})
         return {"success": True}
 
-    mock_calls = Mock()
-    mock_calls.calls = calls
-    mock_calls.add_call = add_call
-    return mock_calls
+    return calls, add_call
 
 
 # ============================================================================
