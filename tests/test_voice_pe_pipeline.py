@@ -77,9 +77,9 @@ class TestVoicePEConfiguration:
         assert security_config.privacy.get("medical_data_access") == "blocked"
 
         # Verify compliance
-        assert security_config.compliance.get("local_processing_only") == True
-        assert security_config.compliance.get("medical_grade_privacy") == True
-        assert security_config.compliance.get("gdpr_compliant") == True
+        assert security_config.compliance.get("local_processing_only") is True
+        assert security_config.compliance.get("medical_grade_privacy") is True
+        assert security_config.compliance.get("gdpr_compliant") is True
 
     def test_medical_sensor_filtering(self):
         """Test medical sensor filtering functionality."""
@@ -160,8 +160,8 @@ class TestWyomingProtocolBridge:
 
         success = await bridge.connect_device(device)
 
-        assert success == True
-        assert bridge.connected_devices["voice_pe_test"] == True
+        assert success is True
+        assert bridge.connected_devices["voice_pe_test"] is True
 
     @pytest.mark.asyncio
     async def test_audio_transmission(self, mock_config):
@@ -176,7 +176,7 @@ class TestWyomingProtocolBridge:
         audio_data = b"mock_audio_data"
         success = await bridge.send_audio_to_device("voice_pe_test", audio_data)
 
-        assert success == True
+        assert success is True
 
     @pytest.mark.asyncio
     async def test_device_status(self, mock_config):
@@ -188,7 +188,7 @@ class TestWyomingProtocolBridge:
         status = await bridge.get_device_status("voice_pe_test")
 
         assert status["device_id"] == "voice_pe_test"
-        assert status["connected"] == True
+        assert status["connected"] is True
         assert "capabilities" in status
 
 
@@ -222,7 +222,7 @@ class TestHomeAssistantBridge:
         entities = {"room": "living_room"}
         result = await bridge.execute_action("turn_on_device", entities, sample_context)
 
-        assert result["success"] == True
+        assert result["success"] is True
         assert result["action"] == "light.turn_on"
         assert "living_room" in result["entity_id"]
         assert "turned on" in result["response"].lower()
@@ -238,7 +238,7 @@ class TestHomeAssistantBridge:
         entities = {"room": "bedroom"}
         result = await bridge.execute_action("turn_on_device", entities, sample_context)
 
-        assert result["success"] == False
+        assert result["success"] is False
         assert "medical device access blocked" in result["error"].lower()
         assert "safety" in result["fallback_response"].lower()
 
@@ -252,7 +252,7 @@ class TestHomeAssistantBridge:
             "adjust_brightness", entities, sample_context
         )
 
-        assert result["success"] == True
+        assert result["success"] is True
         assert result["action"] == "light.turn_on"
         assert result["brightness_pct"] == 75
         assert "75%" in result["response"]
@@ -267,7 +267,7 @@ class TestHomeAssistantBridge:
             "adjust_temperature", entities, sample_context
         )
 
-        assert result["success"] == True
+        assert result["success"] is True
         assert result["action"] == "climate.set_temperature"
         assert result["temperature"] == 72
         assert "72 degrees" in result["response"]
@@ -320,7 +320,7 @@ class TestVoicePEPipelineOrchestrator:
         """Test orchestrator initialization."""
         success = await mock_orchestrator.initialize()
 
-        assert success == True
+        assert success is True
         # Verify all services were initialized
         mock_orchestrator.stt_service.initialize.assert_called_once()
         mock_orchestrator.intents_service.initialize.assert_called_once()
@@ -454,14 +454,17 @@ class TestVoicePEPrivacyCompliance:
         config_path = Path(__file__).parent.parent / "config" / "voice_pe_pucks.yml"
         config = VoicePEPipelineConfig(str(config_path))
 
-        assert config.is_local_processing_only() == True
+        assert config.is_local_processing_only() is True
 
         # Check pipeline stages are all local
         for stage_name, stage in config.pipeline_config.stages.items():
             assert stage.processing_location in [
                 "edge_device",
                 "local_jetson",
-            ], f"Non-local processing in stage {stage_name}: {stage.processing_location}"
+            ], (
+                f"Non-local processing in stage {stage_name}: "
+                f"{stage.processing_location}"
+            )
 
     def test_audio_data_retention_policy(self):
         """Test audio data retention compliance."""
@@ -474,7 +477,7 @@ class TestVoicePEPrivacyCompliance:
         # Check device privacy settings
         for device in config.voice_pe_devices:
             assert device.privacy_settings.get("data_retention_policy") == "none"
-            assert device.privacy_settings.get("local_processing_only") == True
+            assert device.privacy_settings.get("local_processing_only") is True
 
     def test_medical_grade_privacy_compliance(self):
         """Test medical grade privacy compliance."""
@@ -482,9 +485,9 @@ class TestVoicePEPrivacyCompliance:
         config = VoicePEPipelineConfig(str(config_path))
 
         compliance = config.security_config.compliance
-        assert compliance.get("medical_grade_privacy") == True
-        assert compliance.get("gdpr_compliant") == True
-        assert compliance.get("responsibility_acceptance_required") == True
+        assert compliance.get("medical_grade_privacy") is True
+        assert compliance.get("gdpr_compliant") is True
+        assert compliance.get("responsibility_acceptance_required") is True
 
         # Verify no external API calls
         privacy = config.security_config.privacy

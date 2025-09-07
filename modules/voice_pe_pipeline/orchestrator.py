@@ -54,7 +54,8 @@ class WyomingProtocolBridge:
             # Simulate Wyoming connection for now
             # In production, this would establish actual Wyoming protocol connection
             logger.info(
-                f"Connecting to {device.device_id} at {device.ip_address}:{device.wyoming_port}"
+                f"Connecting to {device.device_id} at "
+                f"{device.ip_address}:{device.wyoming_port}"
             )
 
             # Mock connection success
@@ -127,7 +128,9 @@ class HomeAssistantBridge:
             return {
                 "success": False,
                 "error": str(e),
-                "fallback_response": "I'm sorry, I couldn't perform that action right now.",
+                "fallback_response": (
+                    "I'm sorry, I couldn't perform that action right now."
+                ),
             }
 
     async def _handle_turn_on(
@@ -143,7 +146,9 @@ class HomeAssistantBridge:
             return {
                 "success": False,
                 "error": "Medical device access blocked for safety",
-                "fallback_response": "I cannot control medical devices for safety reasons.",
+                "fallback_response": (
+                    "I cannot control medical devices for safety reasons."
+                ),
             }
 
         # Simulate Home Assistant service call
@@ -207,7 +212,9 @@ class HomeAssistantBridge:
             "action": "climate.set_temperature",
             "entity_id": f"climate.{room}_thermostat",
             "temperature": temperature,
-            "response": f"I've set the temperature to {temperature} degrees in the {room}.",
+            "response": (
+                f"I've set the temperature to {temperature} degrees in the {room}."
+            ),
         }
 
     async def _handle_camera(
@@ -235,7 +242,10 @@ class HomeAssistantBridge:
         return {
             "success": True,
             "action": "information_query",
-            "response": "I've processed your request. Is there anything specific you'd like me to help with?",
+            "response": (
+                "I've processed your request. Is there anything specific you'd like "
+                "me to help with?"
+            ),
         }
 
 
@@ -403,7 +413,10 @@ class VoicePEPipelineOrchestrator:
             messages = [
                 {
                     "role": "user",
-                    "content": f"User in {context.location} said: '{context.transcript}'. Intent: {context.intent}. Provide helpful response.",
+                    "content": (
+                        f"User in {context.location} said: '{context.transcript}'. "
+                        f"Intent: {context.intent}. Provide helpful response."
+                    ),
                 }
             ]
 
