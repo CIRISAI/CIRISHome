@@ -5,33 +5,29 @@
     "description": "Multi-modal audio processing pipeline for home automation",
     "author": "CIRISHome Team"
   },
-  "services": [{
-    "type": "TOOL",
-    "priority": "HIGH",
-    "class": "audio_pipeline.service.AudioProcessingService",
-    "capabilities": [
-      "process_audio",
-      "analyze_speech",
-      "detect_acoustic_patterns",
-      "extract_audio_features",
-      "modality:audio:home"
-    ],
-    "metadata": {
-      "domain": "home_automation",
-      "modality": "audio",
-      "privacy_level": "home_privacy",
-      "local_processing": true
+  "services": [
+    {
+      "type": "TOOL",
+      "priority": "HIGH",
+      "class": "audio_pipeline.service.AudioProcessingService",
+      "capabilities": [
+        "process_audio",
+        "analyze_speech",
+        "detect_acoustic_patterns",
+        "extract_audio_features",
+        "modality:audio:home"
+      ],
+      "metadata": {
+        "domain": "home_automation",
+        "modality": "audio",
+        "privacy_level": "home_privacy",
+        "local_processing": true
+      }
     }
-  }],
+  ],
   "requirements": {
-    "env_vars": [
-      "AUDIO_MODEL_PATH",
-      "MICROPHONE_DEVICE_ID"
-    ],
-    "hardware": [
-      "microphone",
-      "speakers_optional"
-    ]
+    "env_vars": ["AUDIO_MODEL_PATH", "MICROPHONE_DEVICE_ID"],
+    "hardware": ["microphone", "speakers_optional"]
   },
   "metadata": {
     "purpose": "Home automation audio processing - voice commands, sound detection, acoustic analysis",

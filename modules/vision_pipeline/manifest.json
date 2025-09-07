@@ -5,33 +5,29 @@
     "description": "Multi-modal vision processing pipeline for home automation",
     "author": "CIRISHome Team"
   },
-  "services": [{
-    "type": "TOOL",
-    "priority": "HIGH",
-    "class": "vision_pipeline.service.VisionProcessingService",
-    "capabilities": [
-      "process_image",
-      "analyze_video_feed",
-      "detect_gestures",
-      "extract_visual_features",
-      "modality:vision:home"
-    ],
-    "metadata": {
-      "domain": "home_automation",
-      "modality": "vision",
-      "privacy_level": "home_privacy",
-      "local_processing": true
+  "services": [
+    {
+      "type": "TOOL",
+      "priority": "HIGH",
+      "class": "vision_pipeline.service.VisionProcessingService",
+      "capabilities": [
+        "process_image",
+        "analyze_video_feed",
+        "detect_gestures",
+        "extract_visual_features",
+        "modality:vision:home"
+      ],
+      "metadata": {
+        "domain": "home_automation",
+        "modality": "vision",
+        "privacy_level": "home_privacy",
+        "local_processing": true
+      }
     }
-  }],
+  ],
   "requirements": {
-    "env_vars": [
-      "VISION_MODEL_PATH",
-      "CAMERA_DEVICE_ID"
-    ],
-    "hardware": [
-      "camera",
-      "gpu_optional"
-    ]
+    "env_vars": ["VISION_MODEL_PATH", "CAMERA_DEVICE_ID"],
+    "hardware": ["camera", "gpu_optional"]
   },
   "metadata": {
     "purpose": "Home automation vision processing - cameras, object detection, person recognition",

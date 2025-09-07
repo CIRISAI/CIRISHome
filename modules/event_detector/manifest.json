@@ -5,46 +5,44 @@
     "description": "Local event detection to replace Google Nest cloud processing",
     "author": "CIRISHome Team"
   },
-  "services": [{
-    "type": "TOOL",
-    "priority": "HIGH",
-    "class": "event_detector.service.LocalEventDetectionService",
-    "capabilities": [
-      "detect_person",
-      "detect_motion",
-      "detect_vehicle",
-      "detect_animal",
-      "detect_package",
-      "detect_activity",
-      "generate_ha_events",
-      "provider:local_vision"
-    ],
-    "metadata": {
-      "domain": "home_automation",
-      "replaces": "google_nest_cloud_events",
-      "privacy_level": "100_percent_local",
-      "event_types": [
-        "camera_person",
-        "camera_motion",
-        "camera_vehicle",
-        "camera_animal",
-        "camera_package",
-        "camera_sound",
-        "camera_activity"
-      ]
+  "services": [
+    {
+      "type": "TOOL",
+      "priority": "HIGH",
+      "class": "event_detector.service.LocalEventDetectionService",
+      "capabilities": [
+        "detect_person",
+        "detect_motion",
+        "detect_vehicle",
+        "detect_animal",
+        "detect_package",
+        "detect_activity",
+        "generate_ha_events",
+        "provider:local_vision"
+      ],
+      "metadata": {
+        "domain": "home_automation",
+        "replaces": "google_nest_cloud_events",
+        "privacy_level": "100_percent_local",
+        "event_types": [
+          "camera_person",
+          "camera_motion",
+          "camera_vehicle",
+          "camera_animal",
+          "camera_package",
+          "camera_sound",
+          "camera_activity"
+        ]
+      }
     }
-  }],
+  ],
   "requirements": {
     "env_vars": [
       "HOME_ASSISTANT_URL",
       "HOME_ASSISTANT_TOKEN",
       "EVENT_DETECTION_SENSITIVITY"
     ],
-    "depends_on": [
-      "nest_cameras",
-      "local_models",
-      "vision_pipeline"
-    ]
+    "depends_on": ["nest_cameras", "local_models", "vision_pipeline"]
   },
   "metadata": {
     "purpose": "Replace Google Nest cloud event detection with 100% local processing",

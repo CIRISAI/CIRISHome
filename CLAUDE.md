@@ -18,19 +18,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 CIRISHome follows the four-component MDD model:
 
 ### The Structural Foundation (Three Legs)
+
 1. **LOGIC (HOW)**: Home automation algorithms, device management, voice processing
 2. **SCHEMAS (WHAT)**: Device states, user preferences, environmental data
 3. **PROTOCOLS (WHO)**: Device communication, user interfaces, security boundaries
 
 ### The Purposeful Foundation (The Seat)
+
 4. **MISSION (WHY)**: Enable families to live more comfortably, safely, and sustainably through ethical home intelligence
 
 ## Core Mission: Multi-Modal Medical Infrastructure
 
-**Meta-Goal H-1**: *Develop robust multi-modal AI capabilities (vision, audio, sensor fusion) that enable CIRISMedical to serve those who need medical AI most - underserved communities who cannot access traditional healthcare.*
+**Meta-Goal H-1**: _Develop robust multi-modal AI capabilities (vision, audio, sensor fusion) that enable CIRISMedical to serve those who need medical AI most - underserved communities who cannot access traditional healthcare._
 
 ### Mission Alignment Requirements
+
 Every component must demonstrate:
+
 - **Medical Access Value**: How does this capability help CIRISMedical serve underserved communities?
 - **Resource Efficiency**: How does this work on limited hardware in low-resource settings?
 - **Privacy & Safety**: How does this protect sensitive medical data for vulnerable populations?
@@ -43,12 +47,13 @@ Every component must demonstrate:
 ### Three-Repository CIRIS Ecosystem
 
 1. **CIRISAgent** (Public) - General AI with medical capabilities BLOCKED
-2. **CIRISMedical** (Private) - Medical AI requiring supervision  
+2. **CIRISMedical** (Private) - Medical AI requiring supervision
 3. **CIRISHome** (Public - THIS REPOSITORY) - Home automation & IoT
 
 ### CIRISHome Safety Boundaries
 
 **NEVER implement:**
+
 - Medical/health monitoring (goes to CIRISMedical)
 - General chat capabilities (use CIRISAgent)
 - External cloud dependencies for core functions
@@ -56,6 +61,7 @@ Every component must demonstrate:
 - Data monetization features
 
 **ALWAYS maintain:**
+
 - Local-first processing
 - Family privacy protection
 - Clear consent mechanisms
@@ -69,24 +75,28 @@ Every component must demonstrate:
 ### Multi-Modal Medical Support Services
 
 **Vision Processing Services** (Primary Focus):
+
 - `medical_vision_pipeline` - Image/video processing for medical analysis
 - `camera_management` - Multi-camera coordination and privacy controls
-- `visual_assessment` - Non-medical visual health indicators 
+- `visual_assessment` - Non-medical visual health indicators
 - `gesture_recognition` - Touchless interaction for medical environments
 
 **Audio Processing Services** (Primary Focus):
+
 - `medical_audio_pipeline` - Voice/sound analysis for health indicators
 - `speech_processing` - Advanced voice command processing
 - `acoustic_monitoring` - Environmental health sound detection
 - `privacy_audio_filter` - Medical data audio protection
 
 **Sensor Fusion Services** (Primary Focus):
+
 - `multi_sensor_integration` - Combining various sensor inputs
 - `environmental_correlation` - Health environment relationship analysis
 - `pattern_recognition` - Multi-modal health pattern detection
 - `data_harmonization` - Unified sensor data processing
 
 **Home Assistant Integration Services** (Supporting):
+
 - `ha_chat_bridge` - Enhanced Home Assistant chat capabilities
 - `ha_automation_extension` - Advanced automation scenarios
 - `ha_device_expansion` - Extended device support
@@ -108,12 +118,14 @@ Every component must demonstrate:
 CIRISHome integrates with the established CIRIS wisdom modules from the CIRIS Engine:
 
 ### Geographic Wisdom (`geo_wisdom`)
+
 - **Capabilities**: Address geocoding, routing, navigation assistance
 - **API**: OpenStreetMap (privacy-respecting, no API key required)
 - **Boundaries**: Navigation assistance only - no location tracking or surveillance
 - **Use Cases**: "Where is the nearest pharmacy?", route optimization for medical visits
 
-### Weather Wisdom (`weather_wisdom`)  
+### Weather Wisdom (`weather_wisdom`)
+
 - **Capabilities**: Current conditions, forecasts, weather alerts
 - **Primary API**: NOAA (free, government data for US)
 - **Fallback API**: OpenWeatherMap (international coverage)
@@ -121,6 +133,7 @@ CIRISHome integrates with the established CIRIS wisdom modules from the CIRIS En
 - **Use Cases**: Environmental health factors, medication storage conditions
 
 ### Sensor Wisdom (`sensor_wisdom`)
+
 - **Capabilities**: Safe environmental sensor access via Home Assistant
 - **Medical Filtering**: Comprehensive filtering of medical/health sensors for liability protection
 - **Allowed Domains**: Environmental, energy, security, automation sensors
@@ -128,13 +141,14 @@ CIRISHome integrates with the established CIRIS wisdom modules from the CIRIS En
 - **Safety Keywords**: Filters `heart_rate`, `blood_pressure`, `blood_glucose`, `weight`, `bmi`, etc.
 
 ### Medical Sensor Filtering
+
 Critical safety feature that prevents access to medical sensors:
 
 ```python
 # Prohibited keywords (comprehensive list)
 MEDICAL_KEYWORDS = [
     "heart_rate", "heartrate", "heart rate",
-    "blood_pressure", "bloodpressure", "blood pressure", 
+    "blood_pressure", "bloodpressure", "blood pressure",
     "blood_glucose", "weight", "bmi", "spo2", "pulse",
     "medical", "health", "patient", "vital", "clinical"
 ]
@@ -161,7 +175,7 @@ device_state = {"temperature": 72, "humidity": 45}
 class ClimateState(BaseModel):
     temperature: float = Field(..., ge=0, le=120, description="Temperature in Fahrenheit")
     humidity: int = Field(..., ge=0, le=100, description="Humidity percentage")
-    
+
 climate_state = ClimateState(temperature=72, humidity=45)
 ```
 
@@ -181,7 +195,7 @@ class PrivacyLevel(str, Enum):
     PUBLIC = "public"           # Shareable (weather, general stats)
     HOUSEHOLD = "household"     # Family only (preferences, schedules)
     PERSONAL = "personal"       # Individual only (biometrics, personal data)
-    
+
 class HomeDataPoint(BaseModel):
     value: Any
     privacy_level: PrivacyLevel
@@ -204,7 +218,7 @@ python -m tools.grace_home ha         # Home Assistant integration status
 
 # Multi-modal development
 python -m tools.grace_home vision     # Vision pipeline testing
-python -m tools.grace_home audio      # Audio processing validation  
+python -m tools.grace_home audio      # Audio processing validation
 python -m tools.grace_home sensors    # Sensor fusion monitoring
 python -m tools.grace_home privacy    # Medical-grade privacy audit
 
@@ -213,7 +227,7 @@ python -m tools.grace_home test        # Run multi-modal tests
 python -m tools.grace_home simulate    # Simulate multi-modal scenarios
 python -m tools.grace_home medical_sim # Medical handoff simulation
 
-# Session management  
+# Session management
 python -m tools.grace_home pause       # Save context before break
 python -m tools.grace_home resume      # Resume with safety check
 python -m tools.grace_home night       # End-of-day review
@@ -228,12 +242,12 @@ python -m tools.grace_home night       # End-of-day review
 pytest tests/ -v
 
 # Test categories using pytest markers
-pytest tests/ -m "unit"         # Unit tests - fast, isolated components  
+pytest tests/ -m "unit"         # Unit tests - fast, isolated components
 pytest tests/ -m "integration"  # Integration tests - component interactions
 pytest tests/ -m "safety"       # Safety/security critical tests
 pytest tests/ -m "slow"         # Performance tests requiring more resources
 
-# Docker-based testing  
+# Docker-based testing
 docker-compose --profile test up test-runner
 
 # CI pipeline testing
@@ -241,16 +255,18 @@ make ci  # Runs: clean lint type-check test-coverage security-test
 ```
 
 **Test Coverage by Category**:
+
 - **Home Automation**: 7 tests - Capability enablement, medical filtering
 - **Jetson Integration**: 16 tests - AI models, GPU utilization, error recovery
-- **Security Filtering**: 8 tests - Medical sensor detection, privacy compliance  
+- **Security Filtering**: 8 tests - Medical sensor detection, privacy compliance
 - **Voice Pipeline**: 14 tests - STT → LLM → TTS → HA service calls
 - **Wisdom Modules**: 18 tests - Geo, weather, sensor integration with safety boundaries
 
 **Ecosystem Integration Testing**:
+
 - Home Assistant: `hass` and `aioclient_mock` fixtures (official HA patterns)
 - Wyoming Protocol: Voice message, client/server fixtures for Voice PE pucks
-- ESPHome: Voice assistant device and configuration fixtures  
+- ESPHome: Voice assistant device and configuration fixtures
 - Jetson Nano: CUDA mocking, GPU info, quantized model configs
 
 ---
@@ -264,7 +280,7 @@ make ci  # Runs: clean lint type-check test-coverage security-test
 python -m tools.device_generator create --type thermostat --protocol zigbee
 
 # 2. Generate type-safe schemas
-python -m tools.schema_generator device --name "SmartThermostat" 
+python -m tools.schema_generator device --name "SmartThermostat"
 
 # 3. Test device integration
 python -m tools.test_runner device --simulate thermostat
@@ -290,23 +306,27 @@ python -m tools.privacy_validator voice --intent adjust_temperature
 Before every commit, verify:
 
 **Mission Alignment**:
+
 - [ ] Feature serves family comfort, safety, or sustainability
 - [ ] No unnecessary complexity that doesn't serve mission
 - [ ] Clear benefit to household wellbeing
 
 **Privacy Protection**:
+
 - [ ] Data stays local by default
-- [ ] Clear consent for any data sharing  
+- [ ] Clear consent for any data sharing
 - [ ] Encryption for personal information
 - [ ] No tracking without explicit permission
 
 **Safety Standards**:
+
 - [ ] Device commands validated for safety
 - [ ] Secure communication protocols
 - [ ] Graceful failure modes
 - [ ] Emergency override capabilities
 
 **Technical Quality**:
+
 - [ ] Type-safe schemas (no Dict[str, Any])
 - [ ] Protocol compliance
 - [ ] 85%+ test coverage
@@ -319,7 +339,7 @@ Before every commit, verify:
 ### Voice Privacy Principles
 
 - **Local Processing**: Wake word and basic commands processed locally
-- **Explicit Activation**: Clear audio cues when voice is being processed  
+- **Explicit Activation**: Clear audio cues when voice is being processed
 - **Data Minimization**: Voice data deleted after command execution
 - **Family Context**: Voice recognition for household members only
 
@@ -327,11 +347,11 @@ Before every commit, verify:
 
 ```python
 class VoiceCommand(BaseModel):
-    intent: str                    # "adjust_temperature", "turn_off_lights"  
+    intent: str                    # "adjust_temperature", "turn_off_lights"
     entities: Dict[str, str]       # {"room": "living_room", "temperature": "72"}
     confidence: float              # 0.0 - 1.0 confidence score
     privacy_level: PrivacyLevel    # Determines data handling
-    
+
 class VoiceResponse(BaseModel):
     action_taken: bool
     response_text: str
@@ -345,7 +365,7 @@ class VoiceResponse(BaseModel):
 ### Supported Protocols
 
 - **Matter/Thread**: Primary standard for new devices
-- **Zigbee**: Sensor networks and battery devices  
+- **Zigbee**: Sensor networks and battery devices
 - **Z-Wave**: Secure mesh networking
 - **WiFi**: High-bandwidth devices (cameras, displays)
 - **Bluetooth**: Mobile app integration
@@ -356,7 +376,7 @@ class VoiceResponse(BaseModel):
 class IoTDevice(BaseModel):
     device_id: str
     device_type: DeviceType
-    protocol: DeviceProtocol  
+    protocol: DeviceProtocol
     capabilities: List[DeviceCapability]
     privacy_impact: PrivacyLevel
     last_seen: datetime
@@ -389,7 +409,7 @@ class DataRetentionPolicy(BaseModel):
 
 - Device network isolated from general internet
 - Regular security updates for all components
-- Intrusion detection for unusual device behavior  
+- Intrusion detection for unusual device behavior
 - Emergency shutdown capabilities
 
 ---
@@ -399,11 +419,13 @@ class DataRetentionPolicy(BaseModel):
 ### Relationship to Other CIRIS Repositories
 
 **CIRISAgent Integration**:
+
 - Can delegate general AI queries to CIRISAgent
 - Shares ethical framework and type systems
 - Uses CIRISAgent for natural language understanding
 
 **CIRISMedical Separation**:
+
 - NO health monitoring capabilities
 - NO medical device integration
 - NO biometric data beyond basic presence detection
@@ -412,6 +434,7 @@ class DataRetentionPolicy(BaseModel):
 ### Shared Ethical Framework
 
 Following CIRIS Covenant principles:
+
 - **Beneficence**: Actively improve family wellbeing
 - **Non-maleficence**: Prevent harm through secure design
 - **Integrity**: Transparent operation and open source
@@ -433,7 +456,7 @@ class PublicDeviceStatus(BaseModel):
     last_update: datetime
 
 # Family-centric automation
-class HouseholdSchedule(BaseModel):  
+class HouseholdSchedule(BaseModel):
     family_members: List[FamilyMember]
     shared_preferences: SharedPreferences
     private_schedules: Dict[str, PrivateSchedule] = Field(exclude=True)
@@ -446,12 +469,12 @@ class HouseholdSchedule(BaseModel):
 class PersonTracker:  # NO - violates privacy
     def track_location(self, person_id: str) -> Location: ...
 
-# Don't create medical monitoring  
+# Don't create medical monitoring
 class HealthMonitor:  # NO - belongs in CIRISMedical
     def analyze_vitals(self, biometrics: Dict) -> HealthAdvice: ...
 
 # Don't create cloud dependencies for core functions
-class CloudRequired:  # NO - violates local-first principle  
+class CloudRequired:  # NO - violates local-first principle
     def __init__(self):
         self.api_key = os.getenv("REQUIRED_CLOUD_API")  # Makes system unusable offline
 ```
@@ -483,7 +506,8 @@ class CloudRequired:  # NO - violates local-first principle
 ### 3-Box Hardware Configuration **READY**
 
 **Target Hardware Stack**:
-1. **Home Assistant Yellow** - Main automation hub running CIRIS Engine 
+
+1. **Home Assistant Yellow** - Main automation hub running CIRIS Engine
 2. **Jetson Orin Nano** - Local AI processing (STT, LLM, TTS, Vision)
 3. **Voice PE Pucks** - Multi-modal voice interface throughout home
 
@@ -494,7 +518,7 @@ class CloudRequired:  # NO - violates local-first principle
 cp .env.example .env
 # Edit .env with your Jetson IP and HA token
 
-# 2. Deploy with Docker Compose  
+# 2. Deploy with Docker Compose
 export JETSON_NANO_IP=192.168.1.100
 export HA_TOKEN=your-ha-long-lived-token
 export RESPONSIBILITY_ACCEPTED=true
@@ -531,7 +555,7 @@ OPENAI_MODEL_NAME=llama-4-scout-int4   # Quantized model
 
 - **Local AI Models**: 4-model stack on Jetson Orin Nano
   - **LLM**: llama-4-scout-int4 (~4GB) - Vision-capable language model
-  - **STT**: whisper-large-v3 (~1.5GB) - Speech-to-text processing  
+  - **STT**: whisper-large-v3 (~1.5GB) - Speech-to-text processing
   - **Intent**: distilbert-intent (~250MB) - Intent classification
   - **TTS**: coqui-tts (~500MB) - Text-to-speech synthesis
   - **Total**: ~6.25GB + 0.5GB overhead = 6.75GB (fits in 8GB Jetson)
@@ -549,7 +573,7 @@ OPENAI_MODEL_NAME=llama-4-scout-int4   # Quantized model
 
 - **Mission Alignment**: Every feature serves family wellbeing
 - **Privacy Protection**: Personal data stays in the home
-- **Type Safety**: Zero untyped data structures  
+- **Type Safety**: Zero untyped data structures
 - **Test Coverage**: 85% minimum for home automation logic
 - **Response Time**: <500ms for local device commands
 - **Offline Capability**: Core functions work without internet

@@ -1,7 +1,7 @@
 # Docker Compose Override for Development
 # Use: docker-compose up --profile dev
 
-version: '3.8'
+version: "3.8"
 
 services:
   cirishome:
@@ -49,7 +49,7 @@ services:
     environment:
       - FLASK_ENV=development
     ports:
-      - "11434:11434"  # Ollama/LLM API port
+      - "11434:11434" # Ollama/LLM API port
     volumes:
       - ./scripts/jetson-simulator.py:/app/simulator.py
     networks:

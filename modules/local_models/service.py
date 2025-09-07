@@ -7,27 +7,110 @@ privacy and no cloud dependencies.
 
 import logging
 import os
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional, Protocol, Union
 
-import torch
+try:
+    import torch
+
+    TORCH_AVAILABLE = True
+except ImportError:
+    torch = None  # type: ignore
+    TORCH_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+
+# Type-safe models to replace Dict[str, Any]
+@dataclass
+class ModelConfig:
+    """Configuration for AI models."""
+
+    name: str
+    model_path: str
+    device: str = "cuda"
+    quantization: str = "int4"
+    max_memory: str = "6GB"
+
+
+@dataclass
+class LLMMessage:
+    """Structured message for LLM conversations."""
+
+    role: str  # "user", "assistant", "system"
+    content: str
+
+
+@dataclass
+class LLMResponse:
+    """Structured LLM response."""
+
+    text: str
+    usage: Optional[Dict[str, int]] = None
+    model: Optional[str] = None
+
+
+@dataclass
+class STTResult:
+    """Speech-to-text result."""
+
+    text: str
+    language: Optional[str] = None
+    confidence: Optional[float] = None
+
+
+@dataclass
+class TTSResult:
+    """Text-to-speech result."""
+
+    audio_path: str
+    duration: Optional[float] = None
+    sample_rate: Optional[int] = None
+
+
+@dataclass
+class IntentResult:
+    """Intent classification result."""
+
+    intent: str
+    confidence: float
+    entities: Dict[str, Union[str, int, float]]
+
+
+# Protocol for external library interfaces
+class TokenizerProtocol(Protocol):
+    """Protocol for tokenizer interface."""
+
+    eos_token_id: int
+
+    def __call__(self, text: str, return_tensors: str) -> Any:
+        ...
+
+    def decode(self, tokens: Any, skip_special_tokens: bool = True) -> str:
+        ...
 
 
 class LocalModelManager:
     """Central manager for all local models."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the local model manager."""
-        self.models_path = Path(os.getenv("LOCAL_MODELS_PATH", "./models"))
-        self.jetson_gpu = os.getenv("JETSON_GPU_ENABLED", "true").lower() == "true"
-        self.device = self._setup_device()
-        self.loaded_models = {}
+        self.models_path: Path = Path(os.getenv("LOCAL_MODELS_PATH", "./models"))
+        self.jetson_gpu: bool = (
+            os.getenv("JETSON_GPU_ENABLED", "true").lower() == "true"
+        )
+        self.device: str = self._setup_device()
+        self.loaded_models: Dict[str, Any] = {}
 
     def _setup_device(self) -> str:
         """Configure GPU/CPU device for Jetson Orin Nano."""
-        if self.jetson_gpu and torch.cuda.is_available():
+        if (
+            TORCH_AVAILABLE
+            and self.jetson_gpu
+            and torch is not None
+            and torch.cuda.is_available()
+        ):
             # Jetson Orin Nano specific optimizations
             device = "cuda:0"
             torch.backends.cudnn.benchmark = True
@@ -39,14 +122,18 @@ class LocalModelManager:
             logger.warning("Running on CPU - performance will be limited")
         return device
 
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> Dict[str, Union[str, float, int, Dict[str, Any]]]:
         """Get information about available models and memory usage."""
-        if torch.cuda.is_available():
+        gpu_memory: float
+        gpu_allocated: float
+        gpu_cached: float
+
+        if TORCH_AVAILABLE and torch is not None and torch.cuda.is_available():
             gpu_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)
             gpu_allocated = torch.cuda.memory_allocated(0) / (1024**3)
             gpu_cached = torch.cuda.memory_reserved(0) / (1024**3)
         else:
-            gpu_memory = gpu_allocated = gpu_cached = 0
+            gpu_memory = gpu_allocated = gpu_cached = 0.0
 
         return {
             "device": self.device,
@@ -62,15 +149,19 @@ class LocalModelManager:
 class LocalLLMService:
     """Local LLM service using llama-4-scout."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Local LLM service."""
-        self.manager = LocalModelManager()
-        self.model = None
-        self.tokenizer = None
-        self.model_name = "llama-4-scout-int4"
+        self.manager: LocalModelManager = LocalModelManager()
+        self.model: Optional[Any] = None
+        self.tokenizer: Optional[TokenizerProtocol] = None
+        self.model_name: str = "llama-4-scout-int4"
 
-    async def initialize(self):
-        """Load the LLM model."""
+    async def initialize(self) -> bool:
+        """Load the LLM model.
+
+        Returns:
+            bool: True if model loaded successfully, False otherwise.
+        """
         try:
             model_path = self.manager.models_path / "llm" / self.model_name
 
@@ -120,14 +211,28 @@ class LocalLLMService:
             return False
 
     async def call_llm_structured(
-        self, messages: List[Dict], response_model=None, images: List = None, **kwargs
-    ) -> Dict[str, Any]:
-        """Generate structured response using local LLM."""
+        self,
+        messages: List[LLMMessage],
+        response_model: Optional[Any] = None,
+        images: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> LLMResponse:
+        """Generate structured response using local LLM.
+
+        Args:
+            messages: List of conversation messages
+            response_model: Optional pydantic model for structured output
+            images: Optional list of image paths for multimodal processing
+            **kwargs: Additional generation parameters
+
+        Returns:
+            LLMResponse: Structured response from the model
+        """
         if not self.model:
             await self.initialize()
 
-        if not self.model:
-            return {"error": "LLM not available"}
+        if not self.model or not self.tokenizer:
+            return LLMResponse(text="LLM not available", model=self.model_name)
 
         try:
             # Format messages for llama (multimodal)
@@ -138,41 +243,45 @@ class LocalLLMService:
 
             inputs = self.tokenizer(prompt, return_tensors="pt").to(self.manager.device)
 
-            with torch.no_grad():
-                outputs = self.model.generate(
-                    inputs.input_ids,
-                    max_new_tokens=kwargs.get("max_tokens", 512),
-                    temperature=kwargs.get("temperature", 0.7),
-                    do_sample=True,
-                    pad_token_id=self.tokenizer.eos_token_id,
+            if TORCH_AVAILABLE and torch is not None:
+                with torch.no_grad():
+                    outputs = self.model.generate(
+                        inputs.input_ids,
+                        max_new_tokens=kwargs.get("max_tokens", 512),
+                        temperature=kwargs.get("temperature", 0.7),
+                        do_sample=True,
+                        pad_token_id=self.tokenizer.eos_token_id,
+                    )
+
+                response = self.tokenizer.decode(
+                    outputs[0][inputs.input_ids.shape[-1] :], skip_special_tokens=True
                 )
 
-            response = self.tokenizer.decode(
-                outputs[0][inputs.input_ids.shape[-1] :], skip_special_tokens=True
-            )
-
-            return {
-                "content": response.strip(),
-                "model": self.model_name,
-                "device": self.manager.device,
-                "local": True,
-            }
+                return LLMResponse(
+                    text=response.strip(),
+                    model=self.model_name,
+                    usage={"tokens": len(outputs[0])},
+                )
+            else:
+                return LLMResponse(text="PyTorch not available", model=self.model_name)
 
         except Exception as e:
             logger.error(f"LLM generation failed: {e}")
-            return {"error": str(e)}
+            return LLMResponse(text=f"Error: {str(e)}", model=self.model_name)
 
-    def _format_messages(self, messages: List[Dict]) -> str:
+    def _format_messages(self, messages: List[LLMMessage]) -> str:
         """Format messages for llama chat format."""
         formatted = ""
         for msg in messages:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
+            role = msg.role
+            content = msg.content
             formatted += f"<{role}>{content}</{role}>\n"
         formatted += "<assistant>"
         return formatted
 
-    def _format_multimodal_messages(self, messages: List[Dict], images: List) -> str:
+    def _format_multimodal_messages(
+        self, messages: List[LLMMessage], images: List[str]
+    ) -> str:
         """Format multimodal messages with images for Llama-4-Scout."""
         formatted = ""
 
@@ -238,16 +347,24 @@ class LocalLLMService:
 class LocalSTTService:
     """Local Speech-to-Text using Whisper."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Local STT service."""
-        self.manager = LocalModelManager()
-        self.model = None
-        self.processor = None
+        self.manager: LocalModelManager = LocalModelManager()
+        self.model: Optional[Any] = None
+        self.processor: Optional[Any] = None
 
-    async def initialize(self):
-        """Load Whisper model."""
+    async def initialize(self) -> bool:
+        """Load Whisper model.
+
+        Returns:
+            bool: True if model loaded successfully, False otherwise.
+        """
         try:
-            import whisper
+            try:
+                import whisper
+            except ImportError:
+                logger.error("Whisper not available - install openai-whisper")
+                return False
 
             model_path = self.manager.models_path / "stt" / "whisper-large-v3"
 
@@ -266,38 +383,50 @@ class LocalSTTService:
             logger.error(f"Failed to load STT: {e}")
             return False
 
-    async def speech_to_text(self, audio_data: bytes) -> Dict[str, Any]:
-        """Convert speech to text."""
+    async def speech_to_text(self, audio_data: bytes) -> STTResult:
+        """Convert speech to text.
+
+        Args:
+            audio_data: Raw audio bytes
+
+        Returns:
+            STTResult: Transcription result with text and metadata
+        """
         if not self.model:
             await self.initialize()
 
         try:
             # Process audio with Whisper
+            if not self.model:
+                return STTResult(text="STT model not available")
+
             result = self.model.transcribe(audio_data)
 
-            return {
-                "text": result["text"].strip(),
-                "language": result.get("language", "en"),
-                "confidence": 0.95,  # Whisper doesn't provide confidence
-                "model": "whisper-large-v3",
-                "local": True,
-            }
+            return STTResult(
+                text=result["text"].strip(),
+                language=result.get("language", "en"),
+                confidence=0.95,  # Whisper doesn't provide confidence
+            )
 
         except Exception as e:
             logger.error(f"STT failed: {e}")
-            return {"error": str(e)}
+            return STTResult(text=f"Error: {str(e)}")
 
 
 class LocalTTSService:
     """Local Text-to-Speech using Coqui TTS."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Local TTS service."""
-        self.manager = LocalModelManager()
-        self.tts = None
+        self.manager: LocalModelManager = LocalModelManager()
+        self.tts: Optional[Any] = None
 
-    async def initialize(self):
-        """Load TTS model."""
+    async def initialize(self) -> bool:
+        """Load TTS model.
+
+        Returns:
+            bool: True if model loaded successfully, False otherwise.
+        """
         try:
             from TTS.api import TTS
 

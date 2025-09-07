@@ -8,7 +8,17 @@ protocol ecosystems.
 import asyncio
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
+from typing import (
+    Any,
+    AsyncGenerator,
+    Callable,
+    Dict,
+    Generator,
+    Iterator,
+    List,
+    Optional,
+)
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
 
@@ -33,7 +43,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "external" / "ciris-engine"))
 
 
 @pytest.fixture(scope="session")
-def ciris_home_config():
+def ciris_home_config() -> Dict[str, Any]:
     """Global CIRISHome configuration."""
     return {
         "jetson_nano_ip": "192.168.1.100",
@@ -55,7 +65,9 @@ def ciris_home_config():
 
 
 @pytest.fixture
-def env_vars(monkeypatch, ciris_home_config):
+def env_vars(
+    monkeypatch: pytest.MonkeyPatch, ciris_home_config: Dict[str, Any]
+) -> Dict[str, str]:
     """Set up environment variables for testing."""
     env_vars = {
         "OPENAI_API_KEY": "test-jetson-key",
@@ -86,7 +98,7 @@ def env_vars(monkeypatch, ciris_home_config):
 
 
 @pytest.fixture
-def sample_entities():
+def sample_entities() -> List[Dict[str, Any]]:
     """Sample Home Assistant entities."""
     return [
         {
@@ -124,7 +136,7 @@ def sample_entities():
 
 
 @pytest.fixture
-def medical_entities():
+def medical_entities() -> List[Dict[str, Any]]:
     """Medical/health entities that should be filtered out."""
     return [
         {
@@ -158,7 +170,7 @@ def medical_entities():
 
 
 @pytest.fixture
-def sample_audio():
+def sample_audio() -> bytes:
     """Sample audio data for testing."""
     # Mock WAV file header + data
     # Mock WAV file header + data
@@ -170,7 +182,7 @@ def sample_audio():
 
 
 @pytest.fixture
-def sample_image():
+def sample_image() -> bytes:
     """Sample image data for testing."""
     # Simple PNG data
     png_data = (
@@ -186,7 +198,7 @@ def sample_image():
 
 
 @pytest.fixture
-def jetson_responses():
+def jetson_responses() -> Dict[str, Any]:
     """Sample Jetson Nano AI responses."""
     return {
         "stt": {
@@ -218,7 +230,7 @@ def jetson_responses():
 
 
 @pytest.fixture
-def mock_jetson(jetson_responses):
+def mock_jetson(jetson_responses: Dict[str, Any]) -> Mock:
     """Mock Jetson Nano service."""
     jetson = Mock()
 
@@ -232,22 +244,22 @@ def mock_jetson(jetson_responses):
     )
 
     # STT - return different responses based on input
-    def mock_transcribe(audio_data, **kwargs):
+    def mock_transcribe(audio_data: bytes, **kwargs: Any) -> Dict[str, Any]:
         if b"lights" in audio_data:
             return {
                 "text": "Turn on the living room lights",
                 "confidence": 0.95,
                 "processing_time": 2.0,
             }
-        return jetson_responses["stt"]
+        return jetson_responses["stt"]  # type: ignore[no-any-return]
 
     jetson.transcribe = AsyncMock(side_effect=mock_transcribe)
 
     # LLM
-    def mock_generate(prompt, **kwargs):
+    def mock_generate(prompt: str, **kwargs: Any) -> Dict[str, Any]:
         if "lights" in prompt.lower():
-            return jetson_responses["llm_control"]
-        return jetson_responses["llm_simple"]
+            return jetson_responses["llm_control"]  # type: ignore[no-any-return]
+        return jetson_responses["llm_simple"]  # type: ignore[no-any-return]
 
     jetson.generate = AsyncMock(side_effect=mock_generate)
 
@@ -263,7 +275,7 @@ def mock_jetson(jetson_responses):
 
 
 @pytest.fixture
-def mock_homeassistant(sample_entities):
+def mock_homeassistant(sample_entities: List[Dict[str, Any]]) -> Mock:
     """Mock Home Assistant API."""
     ha = Mock()
 
@@ -288,15 +300,18 @@ def mock_homeassistant(sample_entities):
 
 
 @pytest.fixture
-def service_calls():
+def service_calls() -> Mock:
     """Track Home Assistant service calls."""
     calls = []
 
-    def add_call(domain, service, **kwargs):
+    def add_call(domain: str, service: str, **kwargs: Any) -> Dict[str, bool]:
         calls.append({"domain": domain, "service": service, "data": kwargs})
         return {"success": True}
 
-    return calls, add_call
+    mock_calls = Mock()
+    mock_calls.calls = calls
+    mock_calls.add_call = add_call
+    return mock_calls
 
 
 # ============================================================================
@@ -305,7 +320,7 @@ def service_calls():
 
 
 @pytest.fixture
-def voice_pe_devices():
+def voice_pe_devices() -> List[Dict[str, Any]]:
     """Voice PE puck configurations."""
     return [
         {
@@ -322,7 +337,7 @@ def voice_pe_devices():
 
 
 @pytest.fixture
-def wyoming_messages():
+def wyoming_messages() -> Dict[str, Dict[str, Any]]:
     """Wyoming protocol message samples."""
     return {
         "info": {
@@ -336,7 +351,7 @@ def wyoming_messages():
 
 
 @pytest.fixture
-def mock_wyoming():
+def mock_wyoming() -> Mock:
     """Mock Wyoming protocol handler."""
     wyoming = Mock()
     wyoming.connect = AsyncMock()
@@ -353,7 +368,7 @@ def mock_wyoming():
 
 
 @pytest.fixture
-def weather_data():
+def weather_data() -> Dict[str, Any]:
     """Sample weather data."""
     return {
         "location": "Anytown, NY",
@@ -365,7 +380,7 @@ def weather_data():
 
 
 @pytest.fixture
-def geo_data():
+def geo_data() -> Dict[str, Any]:
     """Sample geographic data."""
     return {
         "address": "123 Main Street",
@@ -380,7 +395,11 @@ def geo_data():
 
 
 @pytest.fixture
-def mock_wisdom_modules(weather_data, geo_data, sample_entities):
+def mock_wisdom_modules(
+    weather_data: Dict[str, Any],
+    geo_data: Dict[str, Any],
+    sample_entities: List[Dict[str, Any]],
+) -> Mock:
     """Mock wisdom modules."""
     wisdom = Mock()
 
@@ -409,8 +428,11 @@ def mock_wisdom_modules(weather_data, geo_data, sample_entities):
 
 @pytest.fixture
 async def integration_setup(
-    mock_jetson, mock_homeassistant, mock_wyoming, mock_wisdom_modules
-):
+    mock_jetson: Mock,
+    mock_homeassistant: Mock,
+    mock_wyoming: Mock,
+    mock_wisdom_modules: Mock,
+) -> Dict[str, Mock]:
     """Set up complete integration environment."""
     return {
         "jetson": mock_jetson,
@@ -427,7 +449,7 @@ async def integration_setup(
 if not PYTEST_HOMEASSISTANT_AVAILABLE:
 
     @pytest.fixture
-    def hass():  # noqa: F811
+    def hass() -> Mock:  # noqa: F811
         """Mock Home Assistant instance following official patterns."""
         mock_hass = Mock()
         mock_hass.config_entries = Mock()
@@ -443,7 +465,7 @@ if not PYTEST_HOMEASSISTANT_AVAILABLE:
         return mock_hass
 
     @pytest.fixture
-    def aioclient_mock():  # noqa: F811
+    def aioclient_mock() -> Generator[Mock, None, None]:  # noqa: F811
         """Mock aiohttp client session following HA patterns."""
         with patch(
             "homeassistant.helpers.aiohttp_client.async_get_clientsession"
@@ -463,7 +485,7 @@ if not PYTEST_HOMEASSISTANT_AVAILABLE:
 
 
 @pytest.fixture
-def wyoming_message():
+def wyoming_message() -> Dict[str, Any]:
     """Mock Wyoming protocol message."""
     return {
         "type": "transcribe",
@@ -472,7 +494,7 @@ def wyoming_message():
 
 
 @pytest.fixture
-def wyoming_client():
+def wyoming_client() -> Mock:
     """Mock Wyoming protocol client."""
     client = Mock()
     client.connect = AsyncMock()
@@ -483,7 +505,7 @@ def wyoming_client():
 
 
 @pytest.fixture
-def wyoming_server():
+def wyoming_server() -> Mock:
     """Mock Wyoming protocol server."""
     server = Mock()
     server.start = AsyncMock()
@@ -498,7 +520,7 @@ def wyoming_server():
 
 
 @pytest.fixture
-def esphome_device():
+def esphome_device() -> Mock:
     """Mock ESPHome voice assistant device."""
     device = Mock()
     device.name = "voice-puck-01"
@@ -515,7 +537,7 @@ def esphome_device():
 
 
 @pytest.fixture
-def voice_pe_config():
+def voice_pe_config() -> Dict[str, Any]:
     """Voice PE puck configuration."""
     return {
         "device_name": "voice-puck-01",
@@ -544,7 +566,7 @@ def voice_pe_config():
 
 
 @pytest.fixture
-def mock_cuda():
+def mock_cuda() -> Generator[None, None, None]:
     """Mock CUDA environment for testing without GPU."""
     with patch("torch.cuda.is_available", return_value=True):
         with patch("torch.cuda.device_count", return_value=1):
@@ -553,7 +575,7 @@ def mock_cuda():
 
 
 @pytest.fixture
-def jetson_gpu_info():
+def jetson_gpu_info() -> Dict[str, Any]:
     """Jetson Nano GPU information."""
     return {
         "name": "NVIDIA Tegra X1",
@@ -566,7 +588,7 @@ def jetson_gpu_info():
 
 
 @pytest.fixture
-def quantized_model_config():
+def quantized_model_config() -> Dict[str, Any]:
     """Provide configuration for quantized models on Jetson."""
     return {
         "model_name": "llama-4-scout-int4",
@@ -585,7 +607,7 @@ pytest_plugins = ("pytest_asyncio",)
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
     """Create event loop for async tests."""
     loop = asyncio.new_event_loop()
     yield loop
@@ -593,11 +615,133 @@ def event_loop():
 
 
 # ============================================================================
+# CIRIS Engine WiseBus Fixtures
+# ============================================================================
+
+
+@pytest.fixture
+def wise_bus_prohibited_capabilities() -> set[str]:
+    """Standard set of CIRIS Engine WiseBus prohibited capabilities."""
+    return {
+        "domain:medical",
+        "domain:health",
+        "domain:clinical",
+        "domain:patient",
+        "modality:sensor:medical",
+        "modality:sensor:health",
+        "modality:sensor:vital_signs",
+        "action:medical_device_control",
+        "capability:patient_data_access",
+        "domain:home_automation",  # Should be removed by home_enabler
+        "action:home_control",  # Should be removed by home_enabler
+        "capability:device_automation",  # Should be removed by home_enabler
+        "automation:lighting",  # Should be removed by home_enabler
+        "automation:hvac",  # Should be removed by home_enabler
+        "domain:unknown_future",  # Should remain (not home-related)
+        "action:data_processing",  # Should remain (not home-related)
+    }
+
+
+@pytest.fixture
+def mock_wise_bus(wise_bus_prohibited_capabilities: set[str]) -> Mock:
+    """Mock WiseBus class with comprehensive capability system."""
+    wise_bus = Mock()
+    wise_bus.PROHIBITED_CAPABILITIES = wise_bus_prohibited_capabilities.copy()
+
+    # Add realistic WiseBus methods and properties
+    wise_bus.get_capabilities = Mock(
+        return_value=list(wise_bus_prohibited_capabilities)
+    )
+    wise_bus.is_capability_prohibited = Mock()
+    wise_bus.add_prohibited_capability = Mock()
+    wise_bus.remove_prohibited_capability = Mock()
+
+    # Mock the logger for tracking capability changes
+    wise_bus.logger = Mock()
+
+    return wise_bus
+
+
+@pytest.fixture
+def mock_wise_bus_module(mock_wise_bus: Mock) -> Mock:
+    """Mock the entire ciris_engine.logic.buses.wise_bus module."""
+    module = Mock()
+    module.WiseBus = mock_wise_bus
+    return module
+
+
+@pytest.fixture
+def wise_bus_import_success(mock_wise_bus_module: Mock) -> Any:
+    """Context manager for successful WiseBus import."""
+    # Use a more targeted approach - patch the specific import location
+    return patch.dict(
+        "sys.modules", {"ciris_engine.logic.buses.wise_bus": mock_wise_bus_module}
+    )
+
+
+@pytest.fixture
+def wise_bus_import_failure() -> Any:
+    """Context manager for WiseBus import failure."""
+    # Mock the import to fail by making sys.modules raise ImportError
+    import sys
+
+    def _failing_import(name: str, *args: Any, **kwargs: Any) -> Any:
+        if name == "ciris_engine.logic.buses.wise_bus":
+            raise ImportError("No module named 'ciris_engine'")
+        # Call the original __import__ for other modules
+        return original_import(name, *args, **kwargs)
+
+    original_import = (
+        __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
+    )
+    return patch("builtins.__import__", side_effect=_failing_import)
+
+
+@pytest.fixture
+def wise_bus_exception() -> Any:
+    """Context manager for WiseBus runtime exceptions."""
+    # Create mock module that raises exception when WiseBus.PROHIBITED_CAPABILITIES is accessed
+    mock_module = Mock()
+    mock_wise_bus = Mock()
+
+    # Use PropertyMock to make PROHIBITED_CAPABILITIES access raise exception
+    type(mock_wise_bus).PROHIBITED_CAPABILITIES = PropertyMock(
+        side_effect=RuntimeError("WiseBus internal error")
+    )
+
+    mock_module.WiseBus = mock_wise_bus
+
+    return patch.dict("sys.modules", {"ciris_engine.logic.buses.wise_bus": mock_module})
+
+
+@pytest.fixture
+def capability_audit_tracker() -> Mock:
+    """Track capability changes for security auditing."""
+    changes = []
+
+    def track_change(
+        action: str, capabilities: set[str], timestamp: Optional[Any] = None
+    ) -> None:
+        import datetime
+
+        if timestamp is None:
+            timestamp = datetime.datetime.now()
+        changes.append(
+            {"action": action, "capabilities": capabilities, "timestamp": timestamp}
+        )
+
+    mock_tracker = Mock()
+    mock_tracker.changes = changes
+    mock_tracker.track_change = track_change
+    return mock_tracker
+
+
+# ============================================================================
 # Test Categories
 # ============================================================================
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     """Configure pytest markers."""
     config.addinivalue_line("markers", "unit: Unit tests")
     config.addinivalue_line("markers", "integration: Integration tests")
@@ -606,7 +750,9 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "safety: Safety/security tests")
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(
+    config: pytest.Config, items: List[pytest.Item]
+) -> None:
     """Auto-mark tests based on location."""
     for item in items:
         # Auto-mark by directory

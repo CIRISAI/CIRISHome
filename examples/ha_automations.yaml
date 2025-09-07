@@ -52,7 +52,7 @@ automation:
       - if:
           - condition: state
             entity_id: binary_sensor.garage_door
-            state: "off"  # closed
+            state: "off" # closed
         then:
           - service: cover.open_cover
             target:

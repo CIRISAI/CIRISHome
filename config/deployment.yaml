@@ -12,7 +12,7 @@ environment:
   HOME_ASSISTANT_TOKEN: "${HA_TOKEN}"
 
   # Responsibility Acceptance
-  I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY: "false"  # Set to "true" to enable
+  I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY: "false" # Set to "true" to enable
 
   # Multi-modal Processing
   VISION_MODEL_PATH: "./models/vision"
@@ -32,8 +32,8 @@ environment:
   AUDIT_ALL_PROCESSING: "true"
 
   # Event Detection Settings
-  EVENT_DETECTION_SENSITIVITY: "0.7"  # 0.0-1.0 confidence threshold
-  REPLACE_GOOGLE_EVENTS: "true"  # Use local detection instead of cloud
+  EVENT_DETECTION_SENSITIVITY: "0.7" # 0.0-1.0 confidence threshold
+  REPLACE_GOOGLE_EVENTS: "true" # Use local detection instead of cloud
 
 modules:
   # Core enabler - must be first
@@ -84,7 +84,7 @@ modules:
 deployment_target:
   platform: "home_assistant"
   runtime: "python3.11+"
-  memory_limit: "2GB"  # Lower than CIRISAgent's 4GB target
+  memory_limit: "2GB" # Lower than CIRISAgent's 4GB target
   storage: "10GB"
 
 compliance:

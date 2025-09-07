@@ -5,47 +5,35 @@
     "description": "Nest camera integration via WebRTC/go2rtc for multi-modal home automation",
     "author": "CIRISHome Team"
   },
-  "services": [{
-    "type": "TOOL",
-    "priority": "HIGH",
-    "class": "nest_cameras.service.NestCameraService",
-    "capabilities": [
-      "get_camera_stream",
-      "analyze_camera_feed",
-      "detect_motion",
-      "extract_camera_frames",
-      "provider:nest_webrtc"
-    ],
-    "metadata": {
-      "domain": "home_automation",
-      "camera_type": "nest",
-      "stream_protocol": "webrtc",
-      "integration": "go2rtc",
-      "privacy_level": "home_privacy"
+  "services": [
+    {
+      "type": "TOOL",
+      "priority": "HIGH",
+      "class": "nest_cameras.service.NestCameraService",
+      "capabilities": [
+        "get_camera_stream",
+        "analyze_camera_feed",
+        "detect_motion",
+        "extract_camera_frames",
+        "provider:nest_webrtc"
+      ],
+      "metadata": {
+        "domain": "home_automation",
+        "camera_type": "nest",
+        "stream_protocol": "webrtc",
+        "integration": "go2rtc",
+        "privacy_level": "home_privacy"
+      }
     }
-  }],
+  ],
   "requirements": {
-    "env_vars": [
-      "WEBRTC_CAMERA_URLS",
-      "GO2RTC_SERVER_URL"
-    ],
-    "integrations": [
-      "webrtc_camera",
-      "go2rtc"
-    ]
+    "env_vars": ["WEBRTC_CAMERA_URLS", "GO2RTC_SERVER_URL"],
+    "integrations": ["webrtc_camera", "go2rtc"]
   },
   "metadata": {
     "purpose": "Access Nest cameras via Home Assistant WebRTC/go2rtc integration for vision processing",
-    "camera_sources": [
-      "Nest Cam",
-      "Nest Doorbell",
-      "Nest Hub Max"
-    ],
-    "stream_formats": [
-      "RTSP via go2rtc",
-      "WebRTC direct",
-      "HLS fallback"
-    ],
+    "camera_sources": ["Nest Cam", "Nest Doorbell", "Nest Hub Max"],
+    "stream_formats": ["RTSP via go2rtc", "WebRTC direct", "HLS fallback"],
     "privacy": "Local processing only - camera streams stay within home network",
     "compatibility": "Works with 'ghetto' Google Home Nest camera integration"
   }

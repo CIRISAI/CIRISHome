@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # CIRISHome on Home Assistant Yellow
@@ -21,7 +21,7 @@ services:
       - OPENAI_API_BASE=http://${JETSON_NANO_IP:-192.168.1.100}:${JETSON_NANO_PORT:-11434}/v1
       - OPENAI_MODEL_NAME=${LLM_MODEL:-llama-4-scout-int4}
     ports:
-      - "8099:8099"  # CIRIS engine port
+      - "8099:8099" # CIRIS engine port
     volumes:
       - ./logs:/app/logs
       - ./data:/app/data

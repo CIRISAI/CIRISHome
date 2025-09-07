@@ -16,21 +16,25 @@
 ## What It Does
 
 **Voice-First Home Control**:
+
 - **Voice Commands**: "Turn on living room lights", "What's the weather?"
-- **Local AI Processing**: Llama-4-Scout INT4 quantized for Jetson Orin Nano  
+- **Local AI Processing**: Llama-4-Scout INT4 quantized for Jetson Orin Nano
 - **Complete Pipeline**: STT (Whisper) → Intent Classification → LLM → TTS (Coqui) → Home Assistant actions
 
 **CIRIS Wisdom Modules Integration**:
+
 - **Geographic**: Address lookup, routing (OpenStreetMap - no tracking)
 - **Weather**: NOAA forecasts, alerts (free government data)
 - **Smart Sensors**: Environmental data with medical sensor filtering for safety
 
 **Multi-Modal Capabilities**:
+
 - **Vision Processing**: Local camera analysis for home security/automation
 - **Audio Intelligence**: Voice commands, acoustic event detection
 - **Sensor Fusion**: Environmental, motion, and automation sensors (medical filtered)
 
 **Privacy & Safety**:
+
 - **100% Local**: All AI processing on your Jetson, no cloud required
 - **Medical Filtering**: Automatically blocks medical sensors for liability protection
 - **Home-Only Focus**: Environmental automation, not health monitoring
@@ -38,8 +42,9 @@
 ## Quick Start
 
 ### Hardware Requirements
+
 1. **Home Assistant Yellow** (or similar HA device)
-2. **Jetson Orin Nano** (8GB recommended) 
+2. **Jetson Orin Nano** (8GB recommended)
 3. **Voice PE Pucks** (ESPHome voice assistants)
 
 ### 3-Step Deployment
@@ -51,7 +56,7 @@ cp .env.example .env
 
 # 2. Deploy complete stack
 export JETSON_NANO_IP=192.168.1.100
-export HA_TOKEN=your-home-assistant-token  
+export HA_TOKEN=your-home-assistant-token
 export RESPONSIBILITY_ACCEPTED=true
 
 ./deploy.sh  # Builds Docker containers and tests full pipeline
@@ -72,13 +77,14 @@ docker-compose --profile dev up
 **Medical Filtering**: Comprehensive keyword detection for safety compliance  
 **Testing**: 63 tests passing, 0 failures - ecosystem fixtures (HA, ESPHome, Wyoming, Jetson)  
 **CI/CD**: GitHub Actions, pre-commit hooks, Docker Compose, security scanning  
-**Multi-modal Support**: Audio, vision, sensor fusion capabilities ready  
+**Multi-modal Support**: Audio, vision, sensor fusion capabilities ready
 
 **Next Phase**: Voice PE puck configuration, advanced Jetson GPU acceleration
 
 ## Architecture
 
 ### 3-Box Hardware Stack
+
 ```mermaid
 graph LR
     A[Voice PE Pucks] -->|Wyoming Protocol| B[Home Assistant Yellow]
@@ -88,19 +94,22 @@ graph LR
 ```
 
 **Processing Flow:**
+
 1. **Voice PE Pucks** - Capture audio via Wyoming protocol
-2. **Home Assistant Yellow** - Run CIRIS Engine, coordinate devices  
+2. **Home Assistant Yellow** - Run CIRIS Engine, coordinate devices
 3. **Jetson Orin Nano** - Process all AI (Whisper STT, DistilBERT Intent, Llama-4-Scout LLM, Coqui TTS)
 
 ### Key Components
+
 - **Voice Pipeline**: Complete STT → Intent Classification → LLM → TTS → HA service call chain
 - **CIRIS Wisdom**: Geographic, Weather, Sensor modules with safety filtering
 - **Medical Filtering**: Automatic blocking of medical sensors for liability protection
 - **Home Integration**: Native Home Assistant add-on with Docker Compose deployment
 
 **Design Principles:**
+
 - **100% Local Processing** - No cloud dependency for core functions
-- **Privacy-First** - Medical-grade data protection  
+- **Privacy-First** - Medical-grade data protection
 - **Resource Efficient** - Works on consumer hardware (Jetson Orin Nano 8GB)
 - **Safety Focused** - Comprehensive medical sensor filtering
 
@@ -112,9 +121,9 @@ graph LR
 # Run complete test suite
 pytest tests/ -v
 
-# Test categories  
+# Test categories
 pytest tests/ -m "unit"         # Fast isolated component tests (7 tests)
-pytest tests/ -m "integration"  # Component interaction tests (16 tests) 
+pytest tests/ -m "integration"  # Component interaction tests (16 tests)
 pytest tests/ -m "safety"       # Security/medical filtering tests (8 tests)
 
 # Docker testing
@@ -122,15 +131,17 @@ docker-compose --profile test up test-runner
 ```
 
 **Test Coverage by Component:**
+
 - **Home Automation** (7 tests): Capability enablement, medical filtering
-- **Jetson Integration** (16 tests): AI models, GPU utilization, error recovery  
+- **Jetson Integration** (16 tests): AI models, GPU utilization, error recovery
 - **Security Filtering** (8 tests): Medical sensor detection, privacy compliance
 - **Voice Pipeline** (14 tests): STT → Intent Classification → LLM → TTS → HA service calls
 - **Wisdom Modules** (18 tests): Geo, weather, sensor integration with safety
 
 **Ecosystem Integration:**
+
 - Home Assistant fixtures using official `hass` and `aioclient_mock` patterns
-- Wyoming Protocol fixtures for Voice PE puck communication  
+- Wyoming Protocol fixtures for Voice PE puck communication
 - ESPHome fixtures for voice assistant device and configuration testing
 - Jetson Nano fixtures with CUDA mocking and quantized model testing
 
@@ -139,6 +150,7 @@ docker-compose --profile test up test-runner
 **[Complete Documentation Hub](docs/README.md)**
 
 **Quick Links:**
+
 - **[Installation Guide](docs/INSTALLATION.md)** - Setup and configuration
 - **[Home Assistant Integration](docs/HA_INTEGRATION.md)** - Working with existing HA
 - **[Vision Pipeline](docs/VISION.md)** - Camera and image processing
@@ -148,23 +160,27 @@ docker-compose --profile test up test-runner
 ## Relationship to CIRIS Ecosystem
 
 **CIRISHome** serves as the multi-modal development platform:
+
 - Develops vision, audio, and sensor capabilities
 - Tests integration patterns with Home Assistant
 - Provides foundation for CIRISMedical deployments
 - Maintains strict separation from medical logic
 
 **Related Repositories:**
+
 - **[CIRISAgent](https://github.com/CIRISAI/CIRISAgent)** - Core AI engine (public)
 - **[CIRISMedical](https://github.com/CIRISAI/CIRISMedical)** - Medical AI implementation (private)
 
 ## Development
 
 ### Prerequisites **READY**
+
 - **Python 3.11/3.12** (tested on both versions)
-- **Docker & Docker Compose** (for containerized development)  
+- **Docker & Docker Compose** (for containerized development)
 - **Home Assistant Yellow** + **Jetson Orin Nano** (for full hardware testing)
 
 ### Development Environment
+
 ```bash
 # Install dependencies
 pip install -r requirements-test.txt
@@ -172,7 +188,7 @@ pip install -r requirements-test.txt
 # Development with simulators (no hardware needed)
 docker-compose --profile dev up    # HA + Jetson simulators included
 
-# Run comprehensive test suite  
+# Run comprehensive test suite
 pytest tests/ -v                   # All 63 tests
 pre-commit run --all-files         # Code quality checks
 
@@ -181,8 +197,9 @@ pre-commit run --all-files         # Code quality checks
 ```
 
 ### Code Quality Standards **ENFORCED**
+
 - **Pre-commit Hooks**: Black formatting, flake8 linting, mypy type checking
-- **Security Scanning**: Bandit security analysis, detect-secrets scanning  
+- **Security Scanning**: Bandit security analysis, detect-secrets scanning
 - **Test Coverage**: 63 tests covering all major components and integrations
 - **CI/CD Pipeline**: GitHub Actions with Python 3.11/3.12 matrix testing
 
@@ -197,6 +214,7 @@ pre-commit run --all-files         # Code quality checks
 ## Privacy & Security
 
 **Medical-Grade Privacy:**
+
 - All processing happens locally
 - No cloud services required for core functions
 - Encrypted data handling
@@ -204,6 +222,7 @@ pre-commit run --all-files         # Code quality checks
 - Audit trails for all data processing
 
 **Resource Efficiency:**
+
 - Designed for limited hardware
 - Optimized for underserved communities
 - No luxury smart home dependencies
@@ -222,6 +241,6 @@ Apache 2.0 License - see [LICENSE](LICENSE) file for details.
 ---
 
 **CIRIS Home: Multi-modal AI capabilities for medical applications**  
-*Developing the vision, audio, and sensor processing needed to serve those who need medical AI most.*
+_Developing the vision, audio, and sensor processing needed to serve those who need medical AI most._
 
 **Ready to contribute?** → **[Get started →](docs/CONTRIBUTING.md)**
