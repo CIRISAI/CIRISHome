@@ -8,16 +8,7 @@ protocol ecosystems.
 import asyncio
 import sys
 from pathlib import Path
-from typing import (
-    Any,
-    AsyncGenerator,
-    Callable,
-    Dict,
-    Generator,
-    Iterator,
-    List,
-    Optional,
-)
+from typing import Any, Dict, Generator, List, Optional
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
@@ -122,7 +113,10 @@ def sample_entities() -> List[Dict[str, Any]]:
         {
             "entity_id": "light.living_room_lights",
             "state": "off",
-            "attributes": {"friendly_name": "Living Room Lights", "brightness": 0},
+            "attributes": {
+                "friendly_name": "Living Room Lights",
+                "brightness": 0,
+            },
         },
         {
             "entity_id": "binary_sensor.front_door_motion",
@@ -239,7 +233,11 @@ def mock_jetson(jetson_responses: Dict[str, Any]) -> Mock:
         return_value={
             "status": "healthy",
             "gpu_memory": "4.2GB/8.0GB",
-            "models_loaded": ["llama-4-scout-int4", "whisper-large-v3", "coqui-tts"],
+            "models_loaded": [
+                "llama-4-scout-int4",
+                "whisper-large-v3",
+                "coqui-tts",
+            ],
         }
     )
 
@@ -258,7 +256,8 @@ def mock_jetson(jetson_responses: Dict[str, Any]) -> Mock:
     # LLM
     def mock_generate(prompt: str, **kwargs: Any) -> Dict[str, Any]:
         if "lights" in prompt.lower():
-            return jetson_responses["llm_control"]  # type: ignore[no-any-return]
+            # type: ignore[no-any-return]
+            return jetson_responses["llm_control"]
         return jetson_responses["llm_simple"]  # type: ignore[no-any-return]
 
     jetson.generate = AsyncMock(side_effect=mock_generate)
@@ -345,8 +344,15 @@ def wyoming_messages() -> Dict[str, Dict[str, Any]]:
             "asr": [{"name": "whisper"}],
             "tts": [{"name": "coqui"}],
         },
-        "transcript": {"type": "transcript", "text": "Turn on the living room lights"},
-        "audio": {"type": "audio", "rate": 22050, "audio": b"mock_audio_response"},
+        "transcript": {
+            "type": "transcript",
+            "text": "Turn on the living room lights",
+        },
+        "audio": {
+            "type": "audio",
+            "rate": 22050,
+            "audio": b"mock_audio_response",
+        },
     }
 
 
@@ -621,7 +627,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop, None, None]:
 
 @pytest.fixture
 def wise_bus_prohibited_capabilities() -> set[str]:
-    """Standard set of CIRIS Engine WiseBus prohibited capabilities."""
+    """Return standard set of CIRIS Engine WiseBus prohibited capabilities."""
     return {
         "domain:medical",
         "domain:health",
@@ -675,7 +681,8 @@ def wise_bus_import_success(mock_wise_bus_module: Mock) -> Any:
     """Context manager for successful WiseBus import."""
     # Use a more targeted approach - patch the specific import location
     return patch.dict(
-        "sys.modules", {"ciris_engine.logic.buses.wise_bus": mock_wise_bus_module}
+        "sys.modules",
+        {"ciris_engine.logic.buses.wise_bus": mock_wise_bus_module},
     )
 
 
@@ -683,7 +690,6 @@ def wise_bus_import_success(mock_wise_bus_module: Mock) -> Any:
 def wise_bus_import_failure() -> Any:
     """Context manager for WiseBus import failure."""
     # Mock the import to fail by making sys.modules raise ImportError
-    import sys
 
     def _failing_import(name: str, *args: Any, **kwargs: Any) -> Any:
         if name == "ciris_engine.logic.buses.wise_bus":
@@ -700,7 +706,8 @@ def wise_bus_import_failure() -> Any:
 @pytest.fixture
 def wise_bus_exception() -> Any:
     """Context manager for WiseBus runtime exceptions."""
-    # Create mock module that raises exception when WiseBus.PROHIBITED_CAPABILITIES is accessed
+    # Create mock module that raises exception when
+    # WiseBus.PROHIBITED_CAPABILITIES is accessed
     mock_module = Mock()
     mock_wise_bus = Mock()
 
@@ -727,7 +734,11 @@ def capability_audit_tracker() -> Mock:
         if timestamp is None:
             timestamp = datetime.datetime.now()
         changes.append(
-            {"action": action, "capabilities": capabilities, "timestamp": timestamp}
+            {
+                "action": action,
+                "capabilities": capabilities,
+                "timestamp": timestamp,
+            }
         )
 
     mock_tracker = Mock()

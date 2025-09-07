@@ -1,8 +1,10 @@
-"""Tests for the home_enabler module - critical capability override functionality."""
+"""
+Tests for the home_enabler module.
+
+Tests critical capability override functionality.
+"""
 
 from unittest.mock import Mock, patch
-
-import pytest
 
 
 class TestHomeEnabler:
@@ -54,7 +56,8 @@ class TestHomeEnabler:
                 # Should still succeed but log warning
                 assert result is True
                 mock_logger.warning.assert_called_with(
-                    "I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY not set to 'true' - "
+                    "I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY not set to "
+                    "'true' - "
                     "some features limited"
                 )
 
@@ -78,12 +81,13 @@ class TestWiseBusCapabilities:
     """Test WiseBus capability filtering logic directly."""
 
     def test_wise_bus_import_error_with_complex_mocking(self):
-        """Test handling of WiseBus import failure using sophisticated import mocking."""
+        """Test handling of WiseBus import failure using sophisticated mocking."""
         # Test the actual ImportError handling by using the real function
         # This tests the real import failure case
         from modules.home_enabler.service import _enable_wise_bus_capabilities
 
-        # This should return False because WiseBus import will fail in the real environment
+        # This should return False because WiseBus import will fail in the
+        # real environment
         result = _enable_wise_bus_capabilities()
 
         # Should return False on import error
@@ -196,7 +200,8 @@ class TestCapabilityFiltering:
 
             # Simulate the logging that should happen
             logger.info(
-                "Enabled home automation capabilities - removed %d restrictions from "
+                "Enabled home automation capabilities - "
+                "removed %d restrictions from "
                 "WiseBus.PROHIBITED_CAPABILITIES",
                 2,
             )
@@ -230,6 +235,7 @@ class TestCapabilityFiltering:
         assert "domain:home_automation" not in should_remain
         assert "action:home_control" not in should_remain
         assert "modality:home:lighting" not in should_remain
-        assert "action:medical_home_care" not in should_remain  # Contains "home"
+        # Contains "home"
+        assert "action:medical_home_care" not in should_remain
 
         assert "domain:medical" in should_remain  # Pure medical, no "home"
