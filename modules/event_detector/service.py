@@ -36,17 +36,17 @@ class DetectionEvent:
 class LocalEventDetectionService:
     """Local event detection service using Llama-4-Scout vision."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the local event detection service."""
         self.ha_url = os.getenv("HOME_ASSISTANT_URL", "http://localhost:8123")
         self.ha_token = os.getenv("HOME_ASSISTANT_TOKEN")
         self.sensitivity = float(os.getenv("EVENT_DETECTION_SENSITIVITY", "0.7"))
 
-        self.active_cameras = {}
-        self.detection_tasks = {}
-        self.event_history = []
-        self.nest_cameras_service = None
-        self.llm_service = None
+        self.active_cameras: Dict[str, bool] = {}
+        self.detection_tasks: Dict[str, Any] = {}
+        self.event_history: List[DetectionEvent] = []
+        self.nest_cameras_service: Optional[Any] = None
+        self.llm_service: Optional[Any] = None
 
         # Event type mapping
         self.event_types = {
@@ -58,7 +58,7 @@ class LocalEventDetectionService:
             "activity": "camera_activity",
         }
 
-    async def initialize(self):
+    async def initialize(self) -> bool:
         """Initialize event detection service."""
         try:
             # Get references to other services
@@ -69,10 +69,14 @@ class LocalEventDetectionService:
             self.llm_service = LocalLLMService()
 
             # Ensure LLM is loaded
-            await self.llm_service.initialize()
+            if self.llm_service:
+                await self.llm_service.initialize()
 
             # Get available cameras
-            cameras = await self.nest_cameras_service.get_available_cameras()
+            if self.nest_cameras_service:
+                cameras = await self.nest_cameras_service.get_available_cameras()
+            else:
+                cameras = []
             logger.info(
                 f"Initialized event detection for {len(cameras)} cameras: {cameras}"
             )
@@ -87,7 +91,7 @@ class LocalEventDetectionService:
             logger.error(f"Failed to initialize event detection: {e}")
             return False
 
-    async def start_camera_detection(self, camera_name: str):
+    async def start_camera_detection(self, camera_name: str) -> None:
         """Start event detection for a specific camera."""
         if camera_name in self.detection_tasks:
             logger.warning(f"Detection already running for {camera_name}")
@@ -97,27 +101,29 @@ class LocalEventDetectionService:
         task = asyncio.create_task(self._detection_loop(camera_name))
         self.detection_tasks[camera_name] = task
 
-    async def stop_camera_detection(self, camera_name: str):
+    async def stop_camera_detection(self, camera_name: str) -> None:
         """Stop event detection for a specific camera."""
         if camera_name in self.detection_tasks:
             self.detection_tasks[camera_name].cancel()
             del self.detection_tasks[camera_name]
             logger.info(f"Stopped event detection for camera: {camera_name}")
 
-    async def _detection_loop(self, camera_name: str):
+    async def _detection_loop(self, camera_name: str) -> None:
         """Run main detection loop for a camera."""
         logger.info(f"Starting detection loop for {camera_name}")
 
         previous_frame = None
-        last_detection_time = {}
+        last_detection_time: Dict[str, datetime] = {}
         detection_cooldown = 10  # seconds between same event types
 
         while True:
             try:
                 # Get camera frames
-                frames = await self.nest_cameras_service.extract_camera_frames(
-                    camera_name, num_frames=3
-                )
+                frames: List[Any] = []
+                if self.nest_cameras_service is not None:
+                    frames = await self.nest_cameras_service.extract_camera_frames(
+                        camera_name, num_frames=3
+                    )
 
                 if not frames:
                     await asyncio.sleep(5)  # Wait before retrying
@@ -177,9 +183,9 @@ class LocalEventDetectionService:
             _, thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)
 
             # Count changed pixels
-            changed_pixels = np.count_nonzero(thresh)
-            total_pixels = thresh.shape[0] * thresh.shape[1]
-            change_percentage = changed_pixels / total_pixels
+            changed_pixels: int = int(np.count_nonzero(thresh))
+            total_pixels: int = int(thresh.shape[0] * thresh.shape[1])
+            change_percentage: float = float(changed_pixels) / float(total_pixels)
 
             # Motion threshold (adjustable)
             return change_percentage > 0.02  # 2% of pixels changed
@@ -283,7 +289,7 @@ class LocalEventDetectionService:
             logger.error(f"Frame analysis failed: {e}")
             return []
 
-    async def _send_ha_event(self, event: DetectionEvent):
+    async def _send_ha_event(self, event: DetectionEvent) -> None:
         """Send event to Home Assistant."""
         if not self.ha_token:
             logger.warning("No Home Assistant token configured")

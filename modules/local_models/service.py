@@ -85,9 +85,11 @@ class TokenizerProtocol(Protocol):
     eos_token_id: int
 
     def __call__(self, text: str, return_tensors: str) -> Any:
+        """Tokenize text and return tensors."""
         ...
 
     def decode(self, tokens: Any, skip_special_tokens: bool = True) -> str:
+        """Decode tokens back to text."""
         ...
 
 
@@ -122,7 +124,7 @@ class LocalModelManager:
             logger.warning("Running on CPU - performance will be limited")
         return device
 
-    def get_model_info(self) -> Dict[str, Union[str, float, int, Dict[str, Any]]]:
+    def get_model_info(self) -> Dict[str, Union[str, bool, List[str]]]:
         """Get information about available models and memory usage."""
         gpu_memory: float
         gpu_allocated: float
@@ -293,37 +295,37 @@ class LocalLLMService:
 
         # Add text messages
         for msg in messages:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
+            role = msg.role
+            content = msg.content
             formatted += f"<{role}>{content}</{role}>\n"
 
         formatted += "<assistant>"
         return formatted
 
     async def analyze_images(
-        self, images: List, question: str = "Describe what you see in these images"
-    ) -> Dict[str, Any]:
+        self, images: List[str], question: str = "Describe what you see in these images"
+    ) -> LLMResponse:
         """Analyze images using Llama-4-Scout vision capabilities."""
         if not images:
-            return {"error": "No images provided"}
+            return LLMResponse(text="Error: No images provided", model=self.model_name)
 
         if len(images) > 8:
             logger.warning(f"Too many images ({len(images)}), using first 8")
             images = images[:8]
 
-        messages = [{"role": "user", "content": question}]
+        messages = [LLMMessage(role="user", content=question)]
 
         return await self.call_llm_structured(messages, images=images)
 
     async def visual_question_answering(
-        self, images: List, question: str
-    ) -> Dict[str, Any]:
+        self, images: List[str], question: str
+    ) -> LLMResponse:
         """Answer questions about images."""
         return await self.analyze_images(images, question)
 
     async def object_localization(
-        self, images: List, objects: List[str]
-    ) -> Dict[str, Any]:
+        self, images: List[str], objects: List[str]
+    ) -> LLMResponse:
         """Locate specific objects in images."""
         objects_str = ", ".join(objects)
         question = (
@@ -333,7 +335,7 @@ class LocalLLMService:
         )
         return await self.analyze_images(images, question)
 
-    async def scene_understanding(self, images: List) -> Dict[str, Any]:
+    async def scene_understanding(self, images: List[str]) -> LLMResponse:
         """Understand the overall scene and context."""
         question = (
             "Analyze these images and provide a detailed understanding of the "
@@ -454,7 +456,10 @@ class LocalTTSService:
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
                 audio_path = temp_file.name
 
-            self.tts.tts_to_file(text=text, file_path=audio_path)
+            if self.tts:
+                self.tts.tts_to_file(text=text, file_path=audio_path)
+            else:
+                return b""
 
             with open(audio_path, "rb") as f:
                 audio_data = f.read()
@@ -477,14 +482,18 @@ class LocalTTSService:
 class LocalIntentsService:
     """Local intent classification and entity extraction."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Local Intents service."""
-        self.manager = LocalModelManager()
-        self.classifier = None
-        self.tokenizer = None
+        self.manager: LocalModelManager = LocalModelManager()
+        self.classifier: Optional[Any] = None
+        self.tokenizer: Optional[TokenizerProtocol] = None
 
-    async def initialize(self):
-        """Load intent classification model."""
+    async def initialize(self) -> bool:
+        """Load intent classification model.
+
+        Returns:
+            bool: True if model loaded successfully, False otherwise.
+        """
         try:
             from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
@@ -505,7 +514,7 @@ class LocalIntentsService:
             logger.error(f"Failed to load intents model: {e}")
             return False
 
-    async def classify_intent(self, text: str) -> Dict[str, Any]:
+    async def classify_intent(self, text: str) -> IntentResult:
         """Classify user intent from text."""
         # Simplified intent classification
         # In production, use a proper trained intent model
@@ -527,17 +536,16 @@ class LocalIntentsService:
         else:
             intent = "general_query"
 
-        return {
-            "intent": intent,
-            "confidence": 0.85,
-            "entities": self._extract_entities(text),
-            "local": True,
-        }
+        return IntentResult(
+            intent=intent,
+            confidence=0.85,
+            entities=self._extract_entities(text),
+        )
 
-    def _extract_entities(self, text: str) -> Dict[str, Any]:
+    def _extract_entities(self, text: str) -> Dict[str, Union[str, int, float]]:
         """Extract entities from text."""
         # Simplified entity extraction
-        entities = {}
+        entities: Dict[str, Union[str, int, float]] = {}
 
         # Room detection
         rooms = ["living room", "bedroom", "kitchen", "bathroom", "garage"]

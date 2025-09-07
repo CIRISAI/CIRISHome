@@ -6,7 +6,7 @@ import numpy as np
 
 class WhisperModel:
     def transcribe(
-        self, audio: Union[str, np.ndarray], **kwargs: Any
+        self, audio: Union[str, np.ndarray[Any, Any]], **kwargs: Any
     ) -> Dict[str, Any]: ...
 
 def load_model(

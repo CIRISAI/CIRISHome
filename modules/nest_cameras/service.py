@@ -8,7 +8,7 @@ server to provide multi-modal vision processing for Nest cameras.
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import cv2
 import numpy as np
@@ -19,11 +19,11 @@ logger = logging.getLogger(__name__)
 class NestCameraService:
     """Service for accessing Nest cameras via WebRTC/go2rtc."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Nest camera service."""
         self.go2rtc_url = os.getenv("GO2RTC_SERVER_URL", "http://127.0.0.1:8554")
         self.camera_urls = self._parse_camera_urls()
-        self.active_streams = {}
+        self.active_streams: Dict[str, Any] = {}
 
     def _parse_camera_urls(self) -> Dict[str, str]:
         """Parse camera URLs from environment variable."""
@@ -140,11 +140,14 @@ class NestCameraService:
         Returns True if motion detected in last few seconds.
         """
         analysis = await self.analyze_camera_feed(camera_name, duration_seconds=3)
-        return analysis.get("motion_detected", False)
+        motion_result = analysis.get("motion_detected", False)
+        if isinstance(motion_result, bool):
+            return motion_result
+        return False
 
     async def extract_camera_frames(
         self, camera_name: str, num_frames: int = 5
-    ) -> List[np.ndarray]:
+    ) -> List[np.ndarray[Any, Any]]:
         """
         Extract specific number of frames from camera feed.
 
@@ -179,11 +182,12 @@ class NestCameraService:
 
     async def get_camera_status(self) -> Dict[str, Any]:
         """Get status of all configured cameras."""
-        status = {
+        status: Dict[str, Any] = {
             "go2rtc_server": self.go2rtc_url,
             "total_cameras": len(self.camera_urls),
             "cameras": {},
         }
+        cameras_dict: Dict[str, Dict[str, Union[str, bool]]] = {}
 
         for camera_name in self.camera_urls.keys():
             try:
@@ -192,16 +196,17 @@ class NestCameraService:
                 is_online = cap.isOpened()
                 cap.release()
 
-                status["cameras"][camera_name] = {
+                cameras_dict[camera_name] = {
                     "url": self.camera_urls[camera_name],
                     "online": is_online,
                     "type": "nest_via_webrtc",
                 }
             except Exception as e:
-                status["cameras"][camera_name] = {
+                cameras_dict[camera_name] = {
                     "url": self.camera_urls[camera_name],
                     "online": False,
                     "error": str(e),
                 }
 
+        status["cameras"] = cameras_dict
         return status
