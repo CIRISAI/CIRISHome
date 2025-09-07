@@ -1,0 +1,231 @@
+# Voice PE Pucks Configuration for CIRISHome
+# Multi-modal HOME automation interface devices
+
+voice_pe_devices:
+  - device_id: "voice_pe_living_room"
+    friendly_name: "Living Room Voice PE"
+    location: "living_room"
+    ip_address: "192.168.1.101"
+    wyoming_port: 10302 # STT service port
+    capabilities:
+      - speech_to_text
+      - text_to_speech
+      - wake_word_detection
+      - led_ring_control
+      - multi_directional_audio
+    model_config:
+      wake_word_model: "openwakeword"
+      stt_model: "faster-whisper-base"
+      audio_sample_rate: 16000
+      audio_channels: 6 # Multi-directional microphone array
+    privacy_settings:
+      local_processing_only: true
+      audio_recording_buffer_ms: 1000 # Minimal buffering
+      data_retention_policy: "none"
+
+  - device_id: "voice_pe_kitchen"
+    friendly_name: "Kitchen Voice PE"
+    location: "kitchen"
+    ip_address: "192.168.1.102"
+    wyoming_port: 10302
+    capabilities:
+      - speech_to_text
+      - text_to_speech
+      - wake_word_detection
+      - led_ring_control
+      - environmental_awareness # Kitchen-specific sensors
+    model_config:
+      wake_word_model: "openwakeword"
+      stt_model: "faster-whisper-base"
+      audio_sample_rate: 16000
+      audio_channels: 4 # Kitchen layout optimized
+    privacy_settings:
+      local_processing_only: true
+      audio_recording_buffer_ms: 1000
+      data_retention_policy: "none"
+
+  - device_id: "voice_pe_bedroom"
+    friendly_name: "Bedroom Voice PE"
+    location: "bedroom"
+    ip_address: "192.168.1.103"
+    wyoming_port: 10302
+    capabilities:
+      - speech_to_text
+      - text_to_speech
+      - wake_word_detection
+      - led_ring_control
+      - sleep_mode_awareness # Bedroom-specific features
+    model_config:
+      wake_word_model: "openwakeword"
+      stt_model: "faster-whisper-base"
+      audio_sample_rate: 16000
+      audio_channels: 2 # Bedroom privacy optimized
+    privacy_settings:
+      local_processing_only: true
+      audio_recording_buffer_ms: 500 # Reduced for privacy
+      data_retention_policy: "none"
+      sleep_mode_enabled: true # Extra privacy during sleep
+
+# Wyoming Protocol Configuration
+wyoming:
+  server_config:
+    host: "0.0.0.0"
+    port_range:
+      start: 10302
+      end: 10310
+    timeout_seconds: 30
+    max_concurrent_connections: 10
+
+  protocol_version: "1.5.0"
+  supported_services:
+    - stt # Speech-to-Text
+    - tts # Text-to-Speech
+    - wake # Wake Word Detection
+    - intent # Intent Recognition (via Jetson)
+
+# Multi-modal Pipeline Configuration
+pipeline:
+  # 4-Stage AI Processing Pipeline
+  stages:
+    1_wake_word:
+      service: "voice_pe_puck"
+      model: "openwakeword"
+      processing_location: "edge_device"
+      privacy_level: "maximum"
+
+    2_speech_to_text:
+      service: "jetson_orin_nano"
+      model: "whisper-large-v3"
+      processing_location: "local_jetson"
+      privacy_level: "high"
+
+    3_intent_classification:
+      service: "jetson_orin_nano"
+      model: "distilbert-intent"
+      processing_location: "local_jetson"
+      privacy_level: "high"
+
+    4_llm_processing:
+      service: "jetson_orin_nano"
+      model: "llama-4-scout-int4"
+      processing_location: "local_jetson"
+      privacy_level: "high"
+
+    5_text_to_speech:
+      service: "jetson_orin_nano"
+      model: "coqui-tts"
+      processing_location: "local_jetson"
+      privacy_level: "high"
+
+  # Data Flow Configuration
+  data_flow:
+    audio_input: "voice_pe_puck"
+    processing_hub: "jetson_orin_nano"
+    home_automation: "home_assistant_yellow"
+    audio_output: "voice_pe_puck"
+
+  # Latency Requirements (milliseconds)
+  latency_targets:
+    wake_word_detection: 50
+    speech_to_text: 500
+    intent_classification: 100
+    llm_processing: 1000
+    text_to_speech: 800
+    total_pipeline: 2500 # Under 2.5 seconds total
+
+# Home Assistant Integration
+home_assistant:
+  connection:
+    url: "http://homeassistant.local:8123"
+    websocket_port: 8123
+    api_version: "2024.9"
+
+  entity_filtering:
+    # Medical sensor filtering for safety/liability
+    prohibited_domains:
+      - medical
+      - health
+      - clinical
+      - patient
+    prohibited_keywords:
+      - heart_rate
+      - blood_pressure
+      - blood_glucose
+      - body_temperature
+      - medical_device
+      - patient_monitor
+      - vital_signs
+
+  allowed_services:
+    - light
+    - switch
+    - climate
+    - media_player
+    - automation
+    - scene
+    - script
+    - camera # For security/monitoring only
+    - sensor # Environmental only (filtered)
+
+# Security & Privacy Configuration
+security:
+  encryption:
+    inter_service_communication: true
+    audio_streaming: true
+    api_endpoints: true
+
+  authentication:
+    voice_pe_devices: "device_certificates"
+    jetson_communication: "mutual_tls"
+    home_assistant_api: "long_lived_tokens"
+
+  privacy:
+    audio_data_retention: "none" # No persistent audio storage
+    conversation_logging: "local_only" # Logs stay on Jetson
+    external_api_calls: "prohibited" # All processing local
+    medical_data_access: "blocked" # Safety/liability protection
+
+  compliance:
+    gdpr_compliant: true
+    medical_grade_privacy: true
+    local_processing_only: true
+    responsibility_acceptance_required: true
+
+# Monitoring & Diagnostics
+monitoring:
+  health_checks:
+    voice_pe_connectivity: 30 # seconds
+    jetson_model_status: 60
+    home_assistant_api: 30
+    pipeline_latency: 5
+
+  metrics_collection:
+    response_times: true
+    error_rates: true
+    device_status: true
+    model_performance: false # Privacy - no accuracy metrics
+
+  alerting:
+    device_offline_threshold: 300 # 5 minutes
+    high_latency_threshold: 5000 # 5 seconds
+    error_rate_threshold: 0.1 # 10%
+
+# Development & Testing Configuration
+development:
+  test_mode_settings:
+    mock_voice_pe_devices: true
+    jetson_simulator_enabled: true
+    home_assistant_dev_instance: true
+
+  debug_features:
+    pipeline_tracing: true
+    audio_recording_for_debug: false # Privacy - never record in prod
+    verbose_logging: true
+
+  ci_cd_integration:
+    automated_testing: true
+    container_deployment: true
+    multi_architecture_support:
+      - x86_64 # Development
+      - aarch64 # Jetson Orin Nano
+      - arm64 # Voice PE Pucks
