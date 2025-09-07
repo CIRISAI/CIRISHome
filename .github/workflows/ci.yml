@@ -141,21 +141,20 @@ jobs:
 
       - name: Test Docker container
         run: |
-          docker run --rm -d \
-            -e JETSON_NANO_IP=192.168.1.100 \
-            -e HA_TOKEN=test-token \
-            -e RESPONSIBILITY_ACCEPTED=true \
+          # Run container in foreground to capture exit code
+          docker run --rm \
+            -e CIRIS_TEST_MODE=true \
+            -e LOCAL_PROCESSING_ONLY=true \
+            -e MEDICAL_GRADE_PRIVACY=true \
+            -e PYTHONPATH=/app \
+            -e I_ACCEPT_HOME_AUTOMATION_RESPONSIBILITY=true \
+            -e HOME_ASSISTANT_URL=http://localhost:8123 \
+            -e HOME_ASSISTANT_TOKEN=test-token-for-ci \
+            -e OPENAI_API_KEY=test-jetson-key \
+            -e OPENAI_API_BASE=http://192.168.1.100:11434/v1 \
+            -e OPENAI_MODEL_NAME=llama-4-scout-int4 \
             --name ciris-test \
             cirishome:test
-
-          # Wait for startup
-          sleep 10
-
-          # Basic health check
-          docker logs ciris-test
-
-          # Cleanup
-          docker stop ciris-test
 
   code-quality:
     name: Code Quality Analysis

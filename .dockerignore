@@ -1,0 +1,54 @@
+# Docker ignore for CIRISHome
+# Exclude unnecessary files from Docker build context
+
+# Version control
+.git
+.github
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.tox
+.venv
+venv/
+.env
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs and temp files
+*.log
+logs/
+data/
+tests/logs/
+tests/outputs/
+
+# External submodules (handled separately)
+external/
+CIRISVoice/
+
+# Docker files (except the one being built)
+docker-compose*.yml
+Dockerfile*
+!Dockerfile.test
+
+# Documentation and misc
+README.md
+*.md
+docs/

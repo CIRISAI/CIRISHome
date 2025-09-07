@@ -12,17 +12,25 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy source code first to access submodules
+COPY . .
+
 # Copy requirements
 COPY requirements-test.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements-test.txt
-
-# Copy source code
-COPY . .
+# Install Python dependencies for testing (skip problematic dependencies)
+RUN pip install --no-cache-dir -r requirements-test.txt && \
+    pip install pydantic fastapi uvicorn aiofiles && \
+    echo "Skipping external/ciris-engine for testing environment"
 
 # Set up test environment
 RUN mkdir -p tests/data tests/logs tests/outputs
 
-# Default command
-CMD ["pytest", "tests/", "--tb=short", "-v"]
+# Set Python path and test environment variables
+ENV PYTHONPATH=/app
+ENV CIRIS_TEST_MODE=true
+ENV LOCAL_PROCESSING_ONLY=true
+ENV MEDICAL_GRADE_PRIVACY=true
+
+# Default command with proper test environment
+CMD ["python", "-m", "pytest", "tests/", "--tb=short", "-v"]
