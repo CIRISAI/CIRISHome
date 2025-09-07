@@ -427,7 +427,7 @@ async def integration_setup(
 if not PYTEST_HOMEASSISTANT_AVAILABLE:
 
     @pytest.fixture
-    def hass():
+    def hass():  # noqa: F811
         """Mock Home Assistant instance following official patterns."""
         mock_hass = Mock()
         mock_hass.config_entries = Mock()
@@ -443,7 +443,7 @@ if not PYTEST_HOMEASSISTANT_AVAILABLE:
         return mock_hass
 
     @pytest.fixture
-    def aioclient_mock():
+    def aioclient_mock():  # noqa: F811
         """Mock aiohttp client session following HA patterns."""
         with patch(
             "homeassistant.helpers.aiohttp_client.async_get_clientsession"

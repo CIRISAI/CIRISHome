@@ -63,6 +63,7 @@ class LocalLLMService:
     """Local LLM service using llama-4-scout."""
 
     def __init__(self):
+        """Initialize the Local LLM service."""
         self.manager = LocalModelManager()
         self.model = None
         self.tokenizer = None
@@ -147,7 +148,7 @@ class LocalLLMService:
                 )
 
             response = self.tokenizer.decode(
-                outputs[0][inputs.input_ids.shape[-1]:], skip_special_tokens=True
+                outputs[0][inputs.input_ids.shape[-1] :], skip_special_tokens=True
             )
 
             return {
@@ -238,6 +239,7 @@ class LocalSTTService:
     """Local Speech-to-Text using Whisper."""
 
     def __init__(self):
+        """Initialize the Local STT service."""
         self.manager = LocalModelManager()
         self.model = None
         self.processor = None
@@ -290,6 +292,7 @@ class LocalTTSService:
     """Local Text-to-Speech using Coqui TTS."""
 
     def __init__(self):
+        """Initialize the Local TTS service."""
         self.manager = LocalModelManager()
         self.tts = None
 
@@ -316,12 +319,24 @@ class LocalTTSService:
             await self.initialize()
 
         try:
-            # Generate audio
-            audio_path = "/tmp/ciris_tts_output.wav"
+            import tempfile
+
+            # Generate audio in secure temp directory
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
+                audio_path = temp_file.name
+
             self.tts.tts_to_file(text=text, file_path=audio_path)
 
             with open(audio_path, "rb") as f:
                 audio_data = f.read()
+
+            # Clean up temporary file
+            import os
+
+            try:
+                os.unlink(audio_path)
+            except OSError:
+                pass  # File already deleted
 
             return audio_data
 
@@ -334,6 +349,7 @@ class LocalIntentsService:
     """Local intent classification and entity extraction."""
 
     def __init__(self):
+        """Initialize the Local Intents service."""
         self.manager = LocalModelManager()
         self.classifier = None
         self.tokenizer = None

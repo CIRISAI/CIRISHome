@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Jetson Nano Simulator for CIRISHome Development.
+
 Simulates the Ollama/LLM API for testing without real hardware.
 """
 
@@ -120,7 +121,15 @@ def health():
 
 
 if __name__ == "__main__":
+    import os
+
     print("🚀 Starting Jetson Nano Simulator...")
     print("📡 API available at: http://0.0.0.0:11434")
     print("🧪 Mock models: llama-4-scout-int4")
-    app.run(host="0.0.0.0", port=11434, debug=True)
+
+    # Use debug mode only in development
+    debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
+    host = os.getenv("JETSON_HOST", "127.0.0.1")  # Default to localhost for security
+    port = int(os.getenv("JETSON_PORT", "11434"))
+
+    app.run(host=host, port=port, debug=debug_mode)

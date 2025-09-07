@@ -55,7 +55,9 @@ def enable_home_capabilities():
 
         logger.info(
             "HOME AUTOMATION ENABLED - Multi-modal capabilities active. "
-            "HA URL: %s, Token: %s", ha_url, 'SET' if ha_token else 'NOT SET'
+            "HA URL: %s, Token: %s",
+            ha_url,
+            "SET" if ha_token else "NOT SET",
         )
         logger.info(
             "Home automation and multi-modal processing enabled for "

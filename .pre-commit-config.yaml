@@ -15,7 +15,7 @@ repos:
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: check-added-large-files
-        args: ['--maxkb=1000']
+        args: ["--maxkb=1000"]
       - id: debug-statements
       - id: check-docstring-first
 
@@ -25,32 +25,33 @@ repos:
     hooks:
       - id: black
         language_version: python3
-        args: ['--line-length=88']
+        args: ["--line-length=88"]
 
   # Import sorting
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
       - id: isort
-        args: ['--profile', 'black', '--line-length=88']
+        args: ["--profile", "black", "--line-length=88"]
 
   # Python linting
   - repo: https://github.com/pycqa/flake8
     rev: 6.1.0
     hooks:
       - id: flake8
-        args: ['--max-line-length=88', '--extend-ignore=E203,W503']
+        args: ["--max-line-length=88", "--extend-ignore=E203,W503,I201"]
         additional_dependencies:
           - flake8-docstrings
-          - flake8-import-order
 
   # Security scanning
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.5
     hooks:
       - id: bandit
-        args: ['--severity-level', 'medium']
-        exclude: '^tests/'
+        args: ["--severity-level", "medium"]
+        exclude: "^tests/"
+        additional_dependencies:
+          - pbr>=6.0.0
 
   # Type checking
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -60,23 +61,23 @@ repos:
         additional_dependencies:
           - types-requests
           - types-PyYAML
-        args: ['--ignore-missing-imports', '--show-error-codes']
-        exclude: '^tests/'
+        args: ["--ignore-missing-imports", "--show-error-codes"]
+        exclude: "^tests/"
 
   # Dockerfile linting
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
     hooks:
       - id: hadolint-docker
-        args: ['--ignore', 'DL3008', '--ignore', 'DL3009']
+        args: ["--ignore", "DL3008", "--ignore", "DL3009"]
 
   # Secrets detection
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
     hooks:
       - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
-        exclude: '^tests/'
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: "^tests/"
 
   # YAML formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
@@ -84,14 +85,14 @@ repos:
     hooks:
       - id: prettier
         types_or: [yaml, json, markdown]
-        exclude: '^external/'
+        exclude: "^external/"
 
   # Shell script linting
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.9.0.6
     hooks:
       - id: shellcheck
-        args: ['--severity=warning']
+        args: ["--severity=warning"]
 
 # Global excludes
 exclude: |
@@ -113,8 +114,8 @@ ci:
 
     for more information, see https://pre-commit.ci
   autofix_prs: true
-  autoupdate_branch: ''
-  autoupdate_commit_msg: '🤖 [pre-commit.ci] pre-commit autoupdate'
+  autoupdate_branch: ""
+  autoupdate_commit_msg: "🤖 [pre-commit.ci] pre-commit autoupdate"
   autoupdate_schedule: weekly
   skip: []
   submodules: false

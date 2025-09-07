@@ -11,7 +11,6 @@ import os
 from typing import Any, Dict, List, Optional
 
 import cv2
-
 import numpy as np
 
 logger = logging.getLogger(__name__)

@@ -83,7 +83,6 @@ class TestMedicalSensorFiltering:
 
     def test_case_insensitive_detection(self, medical_sensor_keywords):
         """Test that medical detection is case insensitive."""
-
         test_entities = [
             {
                 "entity_id": "sensor.HEART_RATE_monitor",
@@ -119,7 +118,6 @@ class TestMedicalSensorFiltering:
 
     def test_edge_cases_detected(self, medical_sensor_keywords):
         """Test edge cases that might bypass filtering."""
-
         edge_cases = [
             {
                 "entity_id": "sensor.heartrate_zone2",  # No underscore
@@ -174,7 +172,6 @@ class TestMedicalSensorFiltering:
 
     def test_comprehensive_keyword_coverage(self):
         """Test comprehensive coverage of medical keywords."""
-
         # Test each keyword in different contexts
         medical_keywords = [
             "heart_rate",
@@ -283,7 +280,6 @@ class TestMedicalSensorFiltering:
 
     def test_filter_tracking_and_monitoring(self, sample_entities, medical_entities):
         """Test that filtering is tracked for monitoring."""
-
         all_entities = sample_entities + medical_entities
         medical_keywords = [
             "heart_rate",
@@ -328,7 +324,6 @@ class TestMedicalSensorFiltering:
 
     def test_no_false_positives(self):
         """Test that legitimate sensors don't get falsely flagged."""
-
         # Sensors that should NOT be flagged as medical
         legitimate_sensors = [
             {

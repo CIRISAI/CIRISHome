@@ -17,9 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent / "external" / "ciris-engine"))
 
 def main():
     """Run CIRISHome platform."""
-    parser = argparse.ArgumentParser(
-        description="CIRISHome Multi-modal AI Platform"
-    )
+    parser = argparse.ArgumentParser(description="CIRISHome Multi-modal AI Platform")
 
     # Adapter selection
     parser.add_argument(

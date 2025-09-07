@@ -32,6 +32,7 @@ flake8-docstrings>=1.7.0
 pylint>=3.0.0
 mypy>=1.8.0
 bandit>=1.7.5
+pbr>=6.0.0
 
 # Ecosystem-specific testing
 pytest-mock>=3.11.0

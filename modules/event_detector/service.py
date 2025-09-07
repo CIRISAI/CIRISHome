@@ -14,9 +14,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-
 import cv2
-
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -135,13 +133,11 @@ class LocalEventDetectionService:
                 # If motion detected or periodic check, analyze with Llama-4-Scout
                 current_time = datetime.now()
                 time_since_last = (
-                    current_time - max(last_detection_time.values(),
-                                       default=datetime.min)
+                    current_time
+                    - max(last_detection_time.values(), default=datetime.min)
                 ).seconds
                 should_analyze = (
-                    motion_detected or
-                    not last_detection_time or
-                    time_since_last > 30
+                    motion_detected or not last_detection_time or time_since_last > 30
                 )
 
                 if should_analyze:
@@ -321,9 +317,7 @@ class LocalEventDetectionService:
                     headers=headers,
                 ) as response:
                     if response.status == 200:
-                        logger.info(
-                            f"Sent {event.event_type} event to Home Assistant"
-                        )
+                        logger.info(f"Sent {event.event_type} event to Home Assistant")
                         self.event_history.append(event)
 
                         # Keep only last 100 events

@@ -11,7 +11,6 @@ class TestGeoWisdom:
     @pytest.mark.asyncio
     async def test_geocoding_functionality(self, mock_wisdom_modules, geo_data):
         """Test address geocoding."""
-
         result = await mock_wisdom_modules.geo.geocode("123 Main Street, Anytown, NY")
 
         assert "latitude" in result
@@ -23,7 +22,6 @@ class TestGeoWisdom:
     @pytest.mark.asyncio
     async def test_routing_functionality(self, mock_wisdom_modules, geo_data):
         """Test route calculation."""
-
         start = {"lat": 40.7128, "lon": -74.0060}
         end = {"lat": 40.7589, "lon": -73.9851}
 
@@ -38,7 +36,6 @@ class TestGeoWisdom:
 
     def test_geo_privacy_compliance(self):
         """Test that geo wisdom uses privacy-respecting APIs."""
-
         # Should use OpenStreetMap (no API key required)
         # Should NOT use Google Maps or other tracking services
 
@@ -56,7 +53,6 @@ class TestGeoWisdom:
     @pytest.mark.asyncio
     async def test_geo_error_handling(self, mock_wisdom_modules):
         """Test geo wisdom error handling."""
-
         # Test invalid address
         mock_wisdom_modules.geo.geocode = AsyncMock(
             side_effect=Exception("Address not found")
@@ -72,7 +68,6 @@ class TestWeatherWisdom:
     @pytest.mark.asyncio
     async def test_current_weather(self, mock_wisdom_modules, weather_data):
         """Test current weather retrieval."""
-
         weather = await mock_wisdom_modules.weather.current("Anytown, NY")
 
         assert "temperature" in weather
@@ -84,7 +79,6 @@ class TestWeatherWisdom:
     @pytest.mark.asyncio
     async def test_weather_forecast(self, mock_wisdom_modules, weather_data):
         """Test weather forecast retrieval."""
-
         forecast = await mock_wisdom_modules.weather.forecast("Anytown, NY", days=3)
 
         assert isinstance(forecast, list)
@@ -96,7 +90,6 @@ class TestWeatherWisdom:
 
     def test_weather_api_compliance(self):
         """Test weather API usage compliance."""
-
         # Should use NOAA (free, no API key for US)
         # Should have OpenWeatherMap as fallback for international
 
@@ -114,7 +107,6 @@ class TestWeatherWisdom:
     @pytest.mark.asyncio
     async def test_weather_alerts(self, mock_wisdom_modules):
         """Test weather alerts functionality."""
-
         # Mock weather alerts
         mock_wisdom_modules.weather.alerts = AsyncMock(
             return_value=[
@@ -141,7 +133,6 @@ class TestSensorWisdom:
     @pytest.mark.asyncio
     async def test_safe_entity_retrieval(self, mock_wisdom_modules, sample_entities):
         """Test retrieval of safe sensor entities."""
-
         entities = await mock_wisdom_modules.sensor.get_safe_entities()
 
         assert isinstance(entities, list)
@@ -155,7 +146,6 @@ class TestSensorWisdom:
 
     def test_medical_sensor_filtering(self, mock_wisdom_modules, medical_entities):
         """Test that medical sensors are filtered out."""
-
         # Medical entities should be filtered out
         filtered = mock_wisdom_modules.sensor.filter_medical(medical_entities)
 
@@ -164,7 +154,6 @@ class TestSensorWisdom:
 
     def test_sensor_filtering_keywords(self):
         """Test comprehensive medical keyword filtering."""
-
         prohibited_keywords = [
             "heart_rate",
             "blood_pressure",
@@ -216,7 +205,6 @@ class TestSensorWisdom:
     @pytest.mark.asyncio
     async def test_ha_integration(self, mock_wisdom_modules):
         """Test Home Assistant integration."""
-
         # Should integrate with HA API
         entities = await mock_wisdom_modules.sensor.get_safe_entities()
 
@@ -228,7 +216,6 @@ class TestSensorWisdom:
 
     def test_sensor_wisdom_safety_boundaries(self):
         """Test that sensor wisdom respects safety boundaries."""
-
         # Prohibited domains
         prohibited_domains = ["medical", "health", "clinical", "patient"]
 
@@ -285,7 +272,6 @@ class TestWisdomIntegration:
     @pytest.mark.asyncio
     async def test_multi_wisdom_query(self, mock_wisdom_modules):
         """Test queries that use multiple wisdom modules."""
-
         # Weather + Geo combination
         weather = await mock_wisdom_modules.weather.current("Anytown, NY")
         location = await mock_wisdom_modules.geo.geocode("Anytown, NY")
@@ -307,7 +293,6 @@ class TestWisdomIntegration:
     @pytest.mark.asyncio
     async def test_sensor_weather_correlation(self, mock_wisdom_modules):
         """Test correlating indoor sensors with outdoor weather."""
-
         # Get indoor sensor data
         indoor_entities = await mock_wisdom_modules.sensor.get_safe_entities()
         indoor_temp = None
@@ -332,7 +317,6 @@ class TestWisdomIntegration:
 
     def test_wisdom_module_boundaries(self):
         """Test that wisdom modules respect their boundaries."""
-
         # Each wisdom module should have clear boundaries
         module_boundaries = {
             "geo": {
@@ -366,7 +350,6 @@ class TestWisdomIntegration:
     @pytest.mark.asyncio
     async def test_wisdom_error_isolation(self, mock_wisdom_modules):
         """Test that wisdom module errors don't cascade."""
-
         # Simulate geo module failure
         mock_wisdom_modules.geo.geocode = AsyncMock(
             side_effect=Exception("Geo service down")
@@ -385,7 +368,6 @@ class TestWisdomIntegration:
 
     def test_wisdom_configuration_validation(self):
         """Test wisdom module configuration validation."""
-
         # Required environment variables for each module
         required_env_vars = {
             "geo": ["CIRIS_OSM_USER_AGENT"],

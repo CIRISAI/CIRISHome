@@ -11,7 +11,6 @@ class TestJetsonIntegration:
     @pytest.mark.asyncio
     async def test_jetson_health_check(self, mock_jetson):
         """Test Jetson Nano health check."""
-
         health = await mock_jetson.health()
 
         assert health["status"] == "healthy"
@@ -22,7 +21,6 @@ class TestJetsonIntegration:
     @pytest.mark.asyncio
     async def test_stt_processing(self, mock_jetson, sample_audio):
         """Test speech-to-text processing."""
-
         result = await mock_jetson.transcribe(sample_audio)
 
         assert "text" in result
@@ -34,7 +32,6 @@ class TestJetsonIntegration:
     @pytest.mark.asyncio
     async def test_llm_text_generation(self, mock_jetson):
         """Test LLM text generation."""
-
         prompt = "What's the weather like today?"
         result = await mock_jetson.generate(prompt)
 
@@ -46,7 +43,6 @@ class TestJetsonIntegration:
     @pytest.mark.asyncio
     async def test_llm_vision_analysis(self, mock_jetson, sample_image):
         """Test LLM vision analysis capabilities."""
-
         # Mock vision response for image analysis
         mock_jetson.generate = AsyncMock(
             return_value={
@@ -78,7 +74,6 @@ class TestJetsonIntegration:
     @pytest.mark.asyncio
     async def test_tts_synthesis(self, mock_jetson):
         """Test text-to-speech synthesis."""
-
         text = "The living room temperature is 72 degrees."
         result = await mock_jetson.synthesize(text)
 
@@ -89,7 +84,6 @@ class TestJetsonIntegration:
 
     def test_model_specifications(self, jetson_responses):
         """Test that Jetson models meet specifications."""
-
         # Test model specifications are handled by response validation below
 
         # Verify response formats match expectations
@@ -111,7 +105,6 @@ class TestJetsonIntegration:
     @pytest.mark.asyncio
     async def test_quantization_effectiveness(self, mock_jetson):
         """Test that INT4 quantization provides good performance."""
-
         # Mock performance metrics for quantized model
         health = await mock_jetson.health()
 
@@ -127,7 +120,6 @@ class TestJetsonIntegration:
     @pytest.mark.asyncio
     async def test_local_processing_verification(self, mock_jetson, ciris_home_config):
         """Test that processing is happening locally on Jetson."""
-
         # Verify endpoints point to local Jetson
         assert ciris_home_config["jetson_nano_ip"].startswith("192.168.")
         assert ciris_home_config["jetson_nano_port"] in [11434, 8080]
@@ -142,7 +134,6 @@ class TestJetsonIntegration:
     @pytest.mark.asyncio
     async def test_performance_requirements(self, mock_jetson, sample_audio):
         """Test that Jetson meets performance requirements."""
-
         import asyncio
 
         # Test STT latency
@@ -175,7 +166,6 @@ class TestModelManagement:
     @pytest.mark.asyncio
     async def test_model_loading_status(self, mock_jetson):
         """Test that required models are loaded."""
-
         health = await mock_jetson.health()
         models_loaded = health.get("models_loaded", [])
 
@@ -186,7 +176,6 @@ class TestModelManagement:
 
     def test_memory_optimization(self, jetson_responses):
         """Test memory usage optimization."""
-
         # INT4 quantization should significantly reduce memory usage
         # Original Llama-4-17B would be ~34GB
         # INT4 quantized should be ~4GB
@@ -207,7 +196,6 @@ class TestModelManagement:
     @pytest.mark.asyncio
     async def test_model_switching_capability(self, mock_jetson):
         """Test ability to switch between different model tasks."""
-
         # Should be able to handle different types of requests
 
         # STT request
@@ -226,7 +214,6 @@ class TestModelManagement:
 
     def test_gpu_utilization_monitoring(self):
         """Test GPU utilization monitoring."""
-
         # Mock GPU metrics
         gpu_metrics = {
             "gpu_utilization": 75,  # Percent
@@ -250,7 +237,6 @@ class TestErrorRecovery:
     @pytest.mark.asyncio
     async def test_model_failure_recovery(self, mock_jetson):
         """Test recovery from model failures."""
-
         # Simulate model failure
         mock_jetson.generate = AsyncMock(side_effect=Exception("Model not responding"))
 
@@ -268,7 +254,6 @@ class TestErrorRecovery:
     @pytest.mark.asyncio
     async def test_gpu_memory_overflow_handling(self, mock_jetson):
         """Test handling of GPU memory overflow."""
-
         # Simulate memory overflow
         mock_jetson.generate = AsyncMock(side_effect=Exception("CUDA out of memory"))
 
@@ -286,7 +271,6 @@ class TestErrorRecovery:
     @pytest.mark.asyncio
     async def test_network_connectivity_issues(self, mock_jetson, ciris_home_config):
         """Test handling of network connectivity issues."""
-
         # Simulate network timeout
         mock_jetson.health = AsyncMock(side_effect=Exception("Connection timeout"))
 
