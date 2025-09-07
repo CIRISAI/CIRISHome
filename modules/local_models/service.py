@@ -187,16 +187,23 @@ class LocalLLMService:
                     bnb_4bit_use_double_quant=True,
                 )
 
-                self.tokenizer = transformers.AutoTokenizer.from_pretrained(
-                    str(model_path)
+                # Load local model - no revision needed for local paths
+                self.tokenizer = (
+                    transformers.AutoTokenizer.from_pretrained(  # nosec B615
+                        str(model_path),
+                        local_files_only=True,  # Ensure we only load from local path
+                    )
                 )
-                self.model = transformers.AutoModelForCausalLM.from_pretrained(
-                    str(model_path),
-                    quantization_config=quantization_config,
-                    torch_dtype=torch.float16,
-                    device_map="auto",
-                    trust_remote_code=True,
-                    low_cpu_mem_usage=True,
+                self.model = (
+                    transformers.AutoModelForCausalLM.from_pretrained(  # nosec B615
+                        str(model_path),
+                        quantization_config=quantization_config,
+                        torch_dtype=torch.float16,
+                        device_map="auto",
+                        trust_remote_code=True,
+                        low_cpu_mem_usage=True,
+                        local_files_only=True,  # Ensure we only load from local path
+                    )
                 )
 
                 logger.info(f"🗜️ Loaded {self.model_name} with INT4 quantization")
@@ -498,9 +505,12 @@ class LocalIntentsService:
             from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
             model_name = "microsoft/DialoGPT-medium"  # Or custom intent model
-            self.tokenizer = AutoTokenizer.from_pretrained(model_name)
+            # Pin to specific revision for security (DialoGPT-medium stable release)
+            self.tokenizer = AutoTokenizer.from_pretrained(
+                model_name, revision="df68cc6b4fdf5fa96ec3e5c07aa5b7c8ea67e5df"
+            )
             self.classifier = AutoModelForSequenceClassification.from_pretrained(
-                model_name
+                model_name, revision="df68cc6b4fdf5fa96ec3e5c07aa5b7c8ea67e5df"
             )
 
             if self.manager.jetson_gpu:
