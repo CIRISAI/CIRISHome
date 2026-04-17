@@ -12,7 +12,8 @@ WORKDIR /app
 # Copy web server module
 COPY rootfs/app/ /app/
 
-# Copy pre-built web assets (or download if empty)
+# Cache bust and copy pre-built web assets
+ARG CACHE_BUST=1.0.2
 COPY www/ /app/web/
 # hadolint ignore=DL4006
 RUN if [ ! -f /app/web/index.html ]; then \
