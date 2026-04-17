@@ -193,8 +193,8 @@
         async function checkStatus() {
             try {
                 const [healthRes, ingressRes] = await Promise.all([
-                    fetch('/health'),
-                    fetch('/ingress-config')
+                    fetch('health'),
+                    fetch('ingress-config')
                 ]);
 
                 const health = await healthRes.json();
@@ -350,7 +350,7 @@
             // First, get HA state for context
             let haContext = '';
             try {
-                const statesRes = await fetch('/api/states');
+                const statesRes = await fetch('api/states');
                 if (statesRes.ok) {
                     const states = await statesRes.json();
                     const summary = states.slice(0, 10).map(s =>
