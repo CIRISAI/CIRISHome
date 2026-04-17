@@ -64,7 +64,7 @@ class CIRISWebServer:
     def __init__(
         self,
         config: CIRISConfig,
-        host: str = "0.0.0.0",
+        host: str = "0.0.0.0",  # nosec B104 - Docker container binding
         port: int = 8099,
         web_dir: Optional[Path] = None,
     ):
@@ -281,7 +281,7 @@ class CIRISWebServer:
 
 async def run_server(
     config: Optional[CIRISConfig] = None,
-    host: str = "0.0.0.0",
+    host: str = "0.0.0.0",  # nosec B104 - intentional for Docker container
     port: int = 8099,
 ) -> None:
     """Run the web server until interrupted.
@@ -320,7 +320,9 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="CIRIS Web UI Server")
-    parser.add_argument("--host", default="0.0.0.0", help="Host to bind to")
+    parser.add_argument(
+        "--host", default="0.0.0.0", help="Host to bind to"  # nosec B104
+    )
     parser.add_argument("--port", type=int, default=8099, help="Port to listen on")
     args = parser.parse_args()
 

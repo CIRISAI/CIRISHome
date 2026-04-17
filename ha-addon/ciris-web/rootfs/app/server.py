@@ -31,7 +31,7 @@ WEB_DIR = Path(os.getenv("CIRIS_WEB_ASSETS", "/app/web"))
 class CIRISAddonServer:
     """Web server for CIRIS Add-on."""
 
-    def __init__(self, host: str = "0.0.0.0", port: int = 8099):
+    def __init__(self, host: str = "0.0.0.0", port: int = 8099):  # nosec B104
         self.host = host
         self.port = port
         self._app = None
@@ -198,7 +198,7 @@ class CIRISAddonServer:
 
 async def main():
     """Run the server."""
-    server = CIRISAddonServer(host="0.0.0.0", port=8099)
+    server = CIRISAddonServer(host="0.0.0.0", port=8099)  # nosec B104
     await server.start()
 
     try:
