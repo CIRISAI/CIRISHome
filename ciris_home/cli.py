@@ -13,7 +13,6 @@ import argparse
 import asyncio
 import logging
 import sys
-from pathlib import Path
 from typing import Optional
 
 from . import __version__
@@ -62,7 +61,7 @@ def select_from_list(items: list, prompt: str) -> Optional[int]:
 
     for i, item in enumerate(items, 1):
         print(f"  [{i}] {item}")
-    print(f"  [0] Cancel")
+    print("  [0] Cancel")
     print()
 
     while True:
@@ -183,9 +182,9 @@ def cmd_status():
 
     # Check Docker
     if check_docker():
-        print(f"Docker: Available")
+        print("Docker: Available")
     else:
-        print(f"Docker: Not found")
+        print("Docker: Not found")
 
     # Check if agent is running
     import subprocess
@@ -423,7 +422,7 @@ Environment Variables:
 
             from .webserver import run_server
 
-            print(f"\nStarting CIRIS Web UI server...")
+            print("\nStarting CIRIS Web UI server...")
             print(f"Home Assistant: {config.ha_url}")
             asyncio.run(run_server(config))
 

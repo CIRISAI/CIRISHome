@@ -378,7 +378,7 @@ async def authenticate_with_browser(
     await server.start()
 
     try:
-        print(f"\nOpening browser for Home Assistant authentication...")
+        print("\nOpening browser for Home Assistant authentication...")
         print(f"If browser doesn't open, visit: {auth_url}\n")
 
         # Open browser

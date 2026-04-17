@@ -5,7 +5,6 @@ Uses SUPERVISOR_TOKEN for HA API access.
 """
 
 import asyncio
-import json
 import logging
 import mimetypes
 import os

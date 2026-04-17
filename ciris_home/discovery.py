@@ -11,7 +11,7 @@ import logging
 import os
 import socket
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ async def _resolve_mdns(hostname: str) -> str:
         # Use ServiceInfo to resolve
         info = ServiceInfo(
             "_ciris-probe._tcp.local.",
-            f"probe._ciris-probe._tcp.local.",
+            "probe._ciris-probe._tcp.local.",
             server=f"{name}.",
             port=0,
         )
