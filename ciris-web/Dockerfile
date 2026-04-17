@@ -12,15 +12,9 @@ WORKDIR /app
 # Copy web server module
 COPY rootfs/app/ /app/
 
-# Cache bust and copy pre-built web assets
-ARG CACHE_BUST=1.0.2
+# Copy pre-built web assets from repo (no fallback)
 COPY www/ /app/web/
-# hadolint ignore=DL4006
-RUN if [ ! -f /app/web/index.html ]; then \
-        echo "Downloading web assets from GitHub release..." && \
-        curl -sL https://github.com/CIRISAI/CIRISHome/releases/download/v1.0.0-web/ciris-web-assets.tar.gz | tar xz -C /app/web/ && \
-        echo "Assets downloaded successfully"; \
-    fi
+RUN echo "Web assets:" && ls -la /app/web/ && head -5 /app/web/index.html
 
 # Environment
 ENV CIRIS_WEB_ASSETS=/app/web
