@@ -205,3 +205,12 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# HA Add-on web assets - build with ./ha-addon/ciris-web/build-assets.sh
+/ha-addon/ciris-web/www/*.wasm
+/ha-addon/ciris-web/www/*.js
+/ha-addon/ciris-web/www/*.html
+/ha-addon/ciris-web/www/composeResources/
+
+# Mobile web build outputs
+/mobile-web/

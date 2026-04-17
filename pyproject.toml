@@ -1,0 +1,63 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ciris-home"
+version = "0.1.0"
+description = "Multi-modal AI home automation platform with Home Assistant integration"
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+requires-python = ">=3.11"
+authors = [
+    { name = "CIRIS AI", email = "info@ciris.ai" }
+]
+keywords = ["home-automation", "ai", "home-assistant", "voice", "multi-modal"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Home Automation",
+]
+dependencies = [
+    "aiohttp>=3.8.0",
+    "zeroconf>=0.131.0",
+    "requests>=2.28.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+ciris-home = "ciris_home.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/CIRISAI/CIRISHome"
+Documentation = "https://github.com/CIRISAI/CIRISHome#readme"
+Repository = "https://github.com/CIRISAI/CIRISHome"
+Issues = "https://github.com/CIRISAI/CIRISHome/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ciris_home"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

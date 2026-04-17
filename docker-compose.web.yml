@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  ciris-web:
+    image: nginx:alpine
+    container_name: ciris-web
+    ports:
+      - "8099:80"
+    volumes:
+      - ./mobile-web/webApp/build/dist/wasmJs/developmentExecutable:/usr/share/nginx/html:ro
+      - ./ha-addon/ciris-web/nginx.conf:/etc/nginx/nginx.conf:ro
+    restart: unless-stopped
+    networks:
+      - ciris-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  ciris-network:
+    driver: bridge
