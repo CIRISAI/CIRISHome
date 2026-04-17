@@ -6,7 +6,7 @@ LABEL description="CIRISHome Test Runner"
 WORKDIR /app
 
 # Install system dependencies for testing
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
     git \
@@ -19,8 +19,9 @@ COPY . .
 COPY requirements-test.txt .
 
 # Install Python dependencies for testing (skip problematic dependencies)
+# hadolint ignore=DL3013
 RUN pip install --no-cache-dir -r requirements-test.txt && \
-    pip install pydantic fastapi uvicorn aiofiles && \
+    pip install --no-cache-dir pydantic fastapi uvicorn aiofiles && \
     echo "Skipping external/ciris-engine for testing environment"
 
 # Set up test environment

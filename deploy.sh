@@ -36,8 +36,8 @@ echo ""
 echo "🏗️ Building Home Assistant add-on..."
 cd homeassistant-ciris
 docker build \
-    --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-    --build-arg BUILD_REF=$(git rev-parse HEAD) \
+    --build-arg BUILD_DATE="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+    --build-arg BUILD_REF="$(git rev-parse HEAD)" \
     --tag cirishome-addon:latest \
     .
 

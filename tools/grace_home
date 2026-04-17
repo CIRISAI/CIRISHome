@@ -11,7 +11,7 @@ import subprocess
 from pathlib import Path
 
 
-def status():
+def status() -> None:
     """Check multi-modal pipeline health."""
     print("🏠 CIRISHome Multi-Modal Status")
     print("=" * 40)
@@ -46,7 +46,7 @@ def status():
     print("• Multi-modal Fusion: Planned")
 
 
-def morning():
+def morning() -> None:
     """Start development session with safety checks."""
     print("🌅 Good morning! Starting CIRISHome development session")
     print("Running medical-grade safety checks...")
@@ -67,7 +67,7 @@ def morning():
     print("Focus: Building capabilities to serve those who need medical AI most")
 
 
-def vision():
+def vision() -> None:
     """Check vision development readiness."""
     print("📹 Vision Development Environment")
     print("• Nest cameras (WebRTC/go2rtc): Ready for development")
@@ -76,7 +76,7 @@ def vision():
     print("✅ Vision capabilities ready for sustainable development")
 
 
-def audio():
+def audio() -> None:
     """Check audio development readiness."""
     print("🎤 Audio Development Environment")
     print("• Voice PE puck integration: Available")
@@ -85,7 +85,7 @@ def audio():
     print("✅ Audio capabilities ready for sustainable development")
 
 
-def ha():
+def ha() -> None:
     """Check Home Assistant development environment."""
     print("🏠 Home Assistant Development Environment")
     print("• Integration foundation: Available")
@@ -94,7 +94,7 @@ def ha():
     print("✅ HA integration ready for sustainable development")
 
 
-def medical():
+def medical() -> None:
     """Check CIRISMedical compatibility."""
     print("🏥 Checking CIRISMedical Compatibility")
     print("• Multi-modal capabilities: Ready")
@@ -104,7 +104,7 @@ def medical():
     print("✅ Ready to support CIRISMedical development")
 
 
-def dev():
+def dev() -> None:
     """Check development environment health."""
     print("🛠️  Development Environment Health")
     print("• Code quality tools: Available")
@@ -114,14 +114,14 @@ def dev():
     print("✅ Development environment healthy")
 
 
-def night():
+def night() -> None:
     """End development session."""
     print("🌙 End of development session")
     print("Multi-modal home automation advancing...")
     print("Cameras, mics, sensors working together. Rest well!")
 
 
-def cameras():
+def cameras() -> None:
     """Check camera development readiness."""
     print("📷 Camera Development Environment")
     print("• Nest camera access via WebRTC/go2rtc: Available")
@@ -130,7 +130,7 @@ def cameras():
     print("✅ Camera capabilities ready for sustainable development")
 
 
-def main():
+def main() -> None:
     """Run the grace_home command-line tool."""
     parser = argparse.ArgumentParser(
         description="Grace Home - Multi-Modal Development Companion"

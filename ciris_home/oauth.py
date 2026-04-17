@@ -32,6 +32,7 @@ class OAuthTokens:
     ha_url: str
 
     def to_dict(self) -> dict:
+        """Convert tokens to dictionary."""
         return {
             "access_token": self.access_token,
             "refresh_token": self.refresh_token,
@@ -163,6 +164,7 @@ class OAuthCallbackServer:
     """Local HTTP server to receive OAuth callback."""
 
     def __init__(self, port: int = 8099):
+        """Initialize the OAuth callback server."""
         self.port = port
         self.code: Optional[str] = None
         self.state: Optional[str] = None
@@ -203,28 +205,31 @@ class OAuthCallbackServer:
         self.error = request.query.get("error")
 
         if self.error:
-            html = f"""
-            <html><body style="font-family: sans-serif; text-align: center; padding: 50px;">
-            <h1>Authentication Failed</h1>
-            <p>Error: {self.error}</p>
-            <p>You can close this window.</p>
-            </body></html>
-            """
+            html = (
+                '<html><body style="font-family: sans-serif; '
+                'text-align: center; padding: 50px;">'
+                "<h1>Authentication Failed</h1>"
+                f"<p>Error: {self.error}</p>"
+                "<p>You can close this window.</p>"
+                "</body></html>"
+            )
         elif self.code:
-            html = """
-            <html><body style="font-family: sans-serif; text-align: center; padding: 50px;">
-            <h1>Authentication Successful!</h1>
-            <p>CIRIS Home is now connected to Home Assistant.</p>
-            <p>You can close this window and return to the terminal.</p>
-            </body></html>
-            """
+            html = (
+                '<html><body style="font-family: sans-serif; '
+                'text-align: center; padding: 50px;">'
+                "<h1>Authentication Successful!</h1>"
+                "<p>CIRIS Home is now connected to Home Assistant.</p>"
+                "<p>You can close this window and return to the terminal.</p>"
+                "</body></html>"
+            )
         else:
-            html = """
-            <html><body style="font-family: sans-serif; text-align: center; padding: 50px;">
-            <h1>Invalid Callback</h1>
-            <p>No authorization code received.</p>
-            </body></html>
-            """
+            html = (
+                '<html><body style="font-family: sans-serif; '
+                'text-align: center; padding: 50px;">'
+                "<h1>Invalid Callback</h1>"
+                "<p>No authorization code received.</p>"
+                "</body></html>"
+            )
 
         self._event.set()
         return web.Response(text=html, content_type="text/html")

@@ -62,7 +62,7 @@ repos:
           - types-requests
           - types-PyYAML
         args: ["--ignore-missing-imports", "--show-error-codes"]
-        exclude: "^tests/"
+        exclude: "^(tests/|scripts/jetson-simulator\\.py|modules/voice_pe_pipeline/)"
 
   # Dockerfile linting
   - repo: https://github.com/hadolint/hadolint

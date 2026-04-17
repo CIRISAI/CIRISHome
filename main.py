@@ -15,7 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "external" / "ciris-engine"))
 
 
-def main():
+def main() -> None:
     """Run CIRISHome platform."""
     parser = argparse.ArgumentParser(description="CIRISHome Multi-modal AI Platform")
 

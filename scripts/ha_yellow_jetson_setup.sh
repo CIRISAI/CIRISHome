@@ -33,7 +33,6 @@ fi
 
 # Configuration
 REPO_URL="https://github.com/CIRISAI/CIRISHome.git"
-BRANCH="main"
 ADDON_NAME="ciris-home"
 
 print_status "Installing system dependencies..."
@@ -43,7 +42,7 @@ apk add --no-cache git python3 python3-dev py3-pip
 # Create addon directory
 print_status "Setting up CIRISHome addon..."
 mkdir -p /addons/$ADDON_NAME
-cd /addons
+cd /addons || exit
 
 # Clone repository
 if [ -d "$ADDON_NAME" ]; then
@@ -62,7 +61,7 @@ print_status "Setting up addon structure..."
 cp -r temp/* $ADDON_NAME/
 
 # Initialize submodules
-cd $ADDON_NAME
+cd "$ADDON_NAME" || exit
 git submodule update --init --recursive
 
 # Create addon configuration for HA

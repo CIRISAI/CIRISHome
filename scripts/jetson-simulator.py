@@ -8,7 +8,7 @@ Simulates the Ollama/LLM API for testing without real hardware.
 import random
 import time
 
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 
 app = Flask(__name__)
 
@@ -31,13 +31,13 @@ MOCK_RESPONSES = {
 
 
 @app.route("/api/tags", methods=["GET"])
-def list_models():
+def list_models() -> Response:
     """List available models."""
     return jsonify({"models": list(MOCK_MODELS.values())})
 
 
 @app.route("/api/generate", methods=["POST"])
-def generate():
+def generate() -> Response:
     """Generate LLM response."""
     data = request.json
     prompt = data.get("prompt", "").lower()
@@ -73,7 +73,7 @@ def generate():
 
 
 @app.route("/api/chat", methods=["POST"])
-def chat():
+def chat() -> Response:
     """Chat endpoint (alternative API)."""
     data = request.json
     messages = data.get("messages", [])
@@ -104,7 +104,7 @@ def chat():
 
 
 @app.route("/health", methods=["GET"])
-def health():
+def health() -> Response:
     """Health check endpoint."""
     return jsonify(
         {

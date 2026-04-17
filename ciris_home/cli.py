@@ -36,7 +36,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def print_banner():
+def print_banner() -> None:
     """Print CIRIS Home banner."""
     print(
         """
@@ -110,8 +110,8 @@ async def cmd_auth(
 ) -> Optional[OAuthTokens]:
     """Authenticate with Home Assistant.
 
-    If username/password provided, uses programmatic login.
-    Otherwise opens browser for OAuth.
+    If username/password provided, uses programmatic login. Otherwise
+    opens browser for OAuth.
     """
     print(f"\nAuthenticating with {ha_url}...")
 
@@ -163,7 +163,7 @@ def cmd_jetson(config: Optional[CIRISConfig] = None) -> Optional[str]:
     return jetson_ip
 
 
-def cmd_status():
+def cmd_status() -> None:
     """Show current configuration status."""
     print("\nCIRIS Home Status")
     print("=" * 40)
@@ -203,7 +203,7 @@ def cmd_status():
         pass
 
 
-async def run_interactive_setup():
+async def run_interactive_setup() -> None:
     """Run the full interactive setup wizard."""
     print_banner()
 
@@ -312,8 +312,8 @@ Next steps:
     )
 
 
-def main():
-    """Main CLI entry point."""
+def main() -> None:
+    """Run the CIRIS Home CLI."""
     parser = argparse.ArgumentParser(
         description="CIRIS Home - Multi-Modal AI Home Automation",
         formatter_class=argparse.RawDescriptionHelpFormatter,

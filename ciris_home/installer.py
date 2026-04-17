@@ -38,6 +38,7 @@ class CIRISConfig:
     llm_model: str = "gemma3:4b-it-q4_K_M"
 
     def to_dict(self) -> Dict[str, Any]:
+        """Convert configuration to dictionary."""
         return {
             "ha_url": self.ha_url,
             "ha_token": self.ha_token,
@@ -272,7 +273,7 @@ def discover_jetson() -> Optional[str]:
             # Verify Ollama is running
             import aiohttp
 
-            async def check_ollama():
+            async def check_ollama() -> Optional[str]:
                 try:
                     timeout = aiohttp.ClientTimeout(total=2)
                     async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -283,7 +284,9 @@ def discover_jetson() -> Optional[str]:
                     pass
                 return None
 
-            result = asyncio.get_event_loop().run_until_complete(check_ollama())
+            result: Optional[str] = asyncio.get_event_loop().run_until_complete(
+                check_ollama()
+            )
             if result:
                 return result
 

@@ -1,7 +1,7 @@
 """CIRIS Web UI Server for Home Assistant Add-on.
 
-Serves the CIRIS web UI with HA Supervisor integration.
-Uses SUPERVISOR_TOKEN for HA API access.
+Serves the CIRIS web UI with HA Supervisor integration. Uses
+SUPERVISOR_TOKEN for HA API access.
 """
 
 import asyncio
@@ -9,6 +9,7 @@ import logging
 import mimetypes
 import os
 from pathlib import Path
+from typing import Optional
 
 from aiohttp import ClientSession, ClientTimeout, web
 
@@ -31,13 +32,14 @@ class CIRISAddonServer:
     """Web server for CIRIS Add-on."""
 
     def __init__(self, host: str = "0.0.0.0", port: int = 8099):  # nosec B104
+        """Initialize the CIRIS add-on server."""
         self.host = host
         self.port = port
-        self._app = None
-        self._runner = None
-        self._client = None
+        self._app: Optional[web.Application] = None
+        self._runner: Optional[web.AppRunner] = None
+        self._client: Optional[ClientSession] = None
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the web server."""
         if not WEB_DIR.exists():
             raise RuntimeError(f"Web assets not found at {WEB_DIR}")
@@ -67,7 +69,7 @@ class CIRISAddonServer:
         logger.info(f"Serving from: {WEB_DIR}")
         logger.info(f"Supervisor token: {'present' if SUPERVISOR_TOKEN else 'missing'}")
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the server."""
         if self._client:
             await self._client.close()
@@ -195,7 +197,7 @@ class CIRISAddonServer:
             return web.json_response({"error": str(e)}, status=502)
 
 
-async def main():
+async def main() -> None:
     """Run the server."""
     server = CIRISAddonServer(host="0.0.0.0", port=8099)  # nosec B104
     await server.start()

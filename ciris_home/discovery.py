@@ -43,6 +43,7 @@ class DiscoveredHA:
     source: str  # 'mdns', 'probe', 'env'
 
     def __str__(self) -> str:
+        """Return string representation."""
         return f"{self.name} ({self.url})"
 
 
@@ -50,6 +51,7 @@ class HADiscoveryListener:
     """Zeroconf listener for Home Assistant mDNS service."""
 
     def __init__(self) -> None:
+        """Initialize the listener."""
         self.instances: List[DiscoveredHA] = []
 
     def add_service(self, zc: Any, type_: str, name: str) -> None:
@@ -78,9 +80,11 @@ class HADiscoveryListener:
         logger.info(f"[mDNS] Found: {instance}")
 
     def remove_service(self, zc: Any, type_: str, name: str) -> None:
+        """Handle removed service (no-op)."""
         pass
 
     def update_service(self, zc: Any, type_: str, name: str) -> None:
+        """Handle updated service (no-op)."""
         pass
 
 
@@ -168,7 +172,7 @@ async def _resolve_mdns(hostname: str) -> str:
             addresses = info.parsed_addresses()
             if addresses:
                 zc.close()
-                return addresses[0]
+                return str(addresses[0])
 
         zc.close()
     except Exception:

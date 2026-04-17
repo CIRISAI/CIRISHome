@@ -2,6 +2,7 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 # Install Python, dependencies, and curl for downloading assets
+# hadolint ignore=DL3013,DL3018
 RUN apk add --no-cache python3 py3-pip curl && \
     pip3 install --no-cache-dir --break-system-packages aiohttp
 
@@ -13,6 +14,7 @@ COPY rootfs/app/ /app/
 
 # Copy pre-built web assets (or download if empty)
 COPY www/ /app/web/
+# hadolint ignore=DL4006
 RUN if [ ! -f /app/web/index.html ]; then \
         echo "Downloading web assets from GitHub release..." && \
         curl -sL https://github.com/CIRISAI/CIRISHome/releases/download/v1.0.0-web/ciris-web-assets.tar.gz | tar xz -C /app/web/ && \

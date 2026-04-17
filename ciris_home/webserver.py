@@ -1,7 +1,7 @@
 """CIRIS Web UI Server.
 
-Serves the CIRIS web UI and proxies requests to Home Assistant.
-Can be run standalone or as part of ciris-home CLI.
+Serves the CIRIS web UI and proxies requests to Home Assistant. Can be
+run standalone or as part of ciris-home CLI.
 """
 
 import asyncio
@@ -67,6 +67,7 @@ class CIRISWebServer:
         port: int = 8099,
         web_dir: Optional[Path] = None,
     ):
+        """Initialize the CIRIS web server."""
         self.config = config
         self.host = host
         self.port = port
@@ -80,7 +81,8 @@ class CIRISWebServer:
         if not self.web_dir or not self.web_dir.exists():
             raise RuntimeError(
                 "Web assets not found. Build the KMP web app first:\n"
-                "  cd mobile-web && ./gradlew :webApp:wasmJsBrowserDevelopmentExecutableDistribution"
+                "  cd mobile-web\n"
+                "  ./gradlew :webApp:wasmJsBrowserDevelopmentExecutableDistribution"
             )
 
         self._client = ClientSession(timeout=ClientTimeout(total=30))
@@ -177,6 +179,9 @@ class CIRISWebServer:
 
     async def _handle_static(self, request: web.Request) -> web.Response:
         """Serve static files from web assets directory."""
+        # web_dir is validated in start() before this is called
+        assert self.web_dir is not None
+
         path = request.match_info.get("path", "")
 
         if not path or path == "/":
@@ -314,7 +319,7 @@ async def run_server(
         await server.stop()
 
 
-def main():
+def main() -> None:
     """CLI entry point for standalone server."""
     import argparse
 
