@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIRIS - Home Assistant Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #0A0A0F;
+            overflow: hidden;
+        }
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #0A0A0F;
+            color: #6B9AFF;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        #loading h1 {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 16px;
+        }
+        #loading p {
+            font-size: 16px;
+            color: rgba(255,255,255,0.6);
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #1A1A24;
+            border-top-color: #6B9AFF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-top: 24px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <h1>CIRIS</h1>
+        <p>Loading...</p>
+        <div class="spinner"></div>
+    </div>
+    <script src="ciris-web.js"></script>
+    <script>
+        // Hide loading screen when app is ready
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var loading = document.getElementById('loading');
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>
