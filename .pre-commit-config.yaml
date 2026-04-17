@@ -94,6 +94,19 @@ repos:
       - id: shellcheck
         args: ["--severity=warning"]
 
+  # Local hooks for CIRIS-specific validation
+  - repo: local
+    hooks:
+      - id: validate-addon-config
+        name: Validate CIRIS Agent addon config
+        description: Ensures slug never changes and version is valid semver
+        entry: python scripts/validate_addon.py
+        language: python
+        files: 'ciris-agent/config\.yaml$'
+        additional_dependencies:
+          - pyyaml
+        pass_filenames: false
+
 # Global excludes
 exclude: |
   (?x)^(
