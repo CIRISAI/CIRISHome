@@ -1,6 +1,6 @@
 name: CIRIS Web UI
-version: "3.0.0"
-slug: ciris-web-v3
+version: "4.0.0"
+slug: ciris-web
 description: CIRIS Agent Web Interface - Multi-modal AI home automation
 url: https://github.com/CIRISAI/CIRISHome
 arch:
