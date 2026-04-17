@@ -17,7 +17,7 @@ if [ -d "$MOBILE_WEB_DIR/webApp" ]; then
 
     if ./gradlew :webApp:wasmJsBrowserDevelopmentExecutableDistribution; then
         echo "Build successful!"
-        rm -rf "$WWW_DIR"/*
+        rm -rf "${WWW_DIR:?}"/*
         cp -r "$MOBILE_WEB_DIR/webApp/build/dist/wasmJs/developmentExecutable/"* "$WWW_DIR/"
         echo "Assets copied to $WWW_DIR"
         exit 0

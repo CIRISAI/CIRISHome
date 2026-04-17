@@ -39,12 +39,16 @@ logger = logging.getLogger(__name__)
 
 def print_banner():
     """Print CIRIS Home banner."""
-    print("""
+    print(
+        """
 ╔═══════════════════════════════════════════════════════════╗
 ║                     CIRIS Home v{}                      ║
 ║         Multi-Modal AI Home Automation Platform          ║
 ╚═══════════════════════════════════════════════════════════╝
-""".format(__version__.ljust(6)))
+""".format(
+            __version__.ljust(6)
+        )
+    )
 
 
 def select_from_list(items: list, prompt: str) -> Optional[int]:
@@ -133,7 +137,9 @@ def cmd_jetson(config: Optional[CIRISConfig] = None) -> Optional[str]:
     if jetson_ip:
         print(f"Found Jetson at: {jetson_ip}")
     else:
-        jetson_ip = input("Jetson not found. Enter IP address (or press Enter to skip): ").strip()
+        jetson_ip = input(
+            "Jetson not found. Enter IP address (or press Enter to skip): "
+        ).strip()
         if not jetson_ip:
             return None
 
@@ -183,6 +189,7 @@ def cmd_status():
 
     # Check if agent is running
     import subprocess
+
     try:
         result = subprocess.run(
             ["docker", "ps", "--filter", "name=ciris", "--format", "{{.Names}}"],
@@ -231,6 +238,7 @@ async def run_interactive_setup():
 
     # Check for credentials in environment
     import os
+
     username = os.getenv("HA_USERNAME")
     password = os.getenv("HA_PASSWORD")
 
@@ -291,7 +299,8 @@ async def run_interactive_setup():
     print("\n" + "=" * 50)
     print("Setup Complete!")
     print("=" * 50)
-    print(f"""
+    print(
+        f"""
 Your CIRIS Home is configured:
   Home Assistant: {ha.url}
   Jetson LLM: {jetson_ip or 'Not configured'}
@@ -300,7 +309,8 @@ Next steps:
   ciris-home status   - Check status
   ciris-home start    - Start the agent
   ciris-home --help   - See all commands
-""")
+"""
+    )
 
 
 def main():
@@ -349,17 +359,20 @@ Environment Variables:
     )
 
     parser.add_argument(
-        "-u", "--username",
+        "-u",
+        "--username",
         help="Home Assistant username (for programmatic auth)",
     )
 
     parser.add_argument(
-        "-p", "--password",
+        "-p",
+        "--password",
         help="Home Assistant password (for programmatic auth)",
     )
 
     parser.add_argument(
-        "-v", "--verbose",
+        "-v",
+        "--verbose",
         action="store_true",
         help="Enable verbose logging",
     )
@@ -409,6 +422,7 @@ Environment Variables:
                 sys.exit(1)
 
             from .webserver import run_server
+
             print(f"\nStarting CIRIS Web UI server...")
             print(f"Home Assistant: {config.ha_url}")
             asyncio.run(run_server(config))
@@ -420,6 +434,7 @@ Environment Variables:
                 sys.exit(1)
 
             from .webserver import run_server
+
             asyncio.run(run_server(config, port=args.port or 8099))
 
         else:

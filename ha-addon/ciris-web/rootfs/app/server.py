@@ -11,7 +11,7 @@ import mimetypes
 import os
 from pathlib import Path
 
-from aiohttp import web, ClientSession, ClientTimeout
+from aiohttp import ClientSession, ClientTimeout, web
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
@@ -45,7 +45,11 @@ class CIRISAddonServer:
 
         self._client = ClientSession(
             timeout=ClientTimeout(total=30),
-            headers={"Authorization": f"Bearer {SUPERVISOR_TOKEN}"} if SUPERVISOR_TOKEN else {}
+            headers=(
+                {"Authorization": f"Bearer {SUPERVISOR_TOKEN}"}
+                if SUPERVISOR_TOKEN
+                else {}
+            ),
         )
 
         self._app = web.Application()
@@ -85,22 +89,26 @@ class CIRISAddonServer:
             except Exception as e:
                 ha_status = f"error:{e}"
 
-        return web.json_response({
-            "status": "ok",
-            "ha_status": ha_status,
-            "supervisor_token": "present" if SUPERVISOR_TOKEN else "missing",
-        })
+        return web.json_response(
+            {
+                "status": "ok",
+                "ha_status": ha_status,
+                "supervisor_token": "present" if SUPERVISOR_TOKEN else "missing",
+            }
+        )
 
     async def _handle_ingress_config(self, request: web.Request) -> web.Response:
         """Provide config for the web app via ingress."""
         # Get ingress path from headers
         ingress_path = request.headers.get("X-Ingress-Path", "")
 
-        return web.json_response({
-            "ingress_path": ingress_path,
-            "ha_api": f"{ingress_path}/api",
-            "ws_api": f"{ingress_path}/api/websocket",
-        })
+        return web.json_response(
+            {
+                "ingress_path": ingress_path,
+                "ha_api": f"{ingress_path}/api",
+                "ws_api": f"{ingress_path}/api/websocket",
+            }
+        )
 
     async def _handle_static(self, request: web.Request) -> web.Response:
         """Serve static files."""
@@ -140,7 +148,9 @@ class CIRISAddonServer:
             if any(str(file_path).endswith(ext) for ext in [".js", ".wasm", ".css"]):
                 headers["Cache-Control"] = "public, max-age=86400"
 
-            return web.Response(body=content, content_type=content_type, headers=headers)
+            return web.Response(
+                body=content, content_type=content_type, headers=headers
+            )
         except Exception as e:
             logger.error(f"Error reading {file_path}: {e}")
             return web.Response(status=500, text="Internal server error")
@@ -173,10 +183,14 @@ class CIRISAddonServer:
             ) as resp:
                 response_body = await resp.read()
                 response_headers = {
-                    k: v for k, v in resp.headers.items()
-                    if k.lower() not in ("content-encoding", "transfer-encoding", "content-length")
+                    k: v
+                    for k, v in resp.headers.items()
+                    if k.lower()
+                    not in ("content-encoding", "transfer-encoding", "content-length")
                 }
-                return web.Response(status=resp.status, body=response_body, headers=response_headers)
+                return web.Response(
+                    status=resp.status, body=response_body, headers=response_headers
+                )
         except Exception as e:
             logger.error(f"Proxy error: {e}")
             return web.json_response({"error": str(e)}, status=502)

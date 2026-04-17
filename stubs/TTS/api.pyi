@@ -12,7 +12,7 @@ class TTS:
         vocoder_config_path: Optional[str] = None,
         progress_bar: bool = True,
         gpu: bool = False,
-        **kwargs: Any
+        **kwargs: Any,
     ): ...
     def tts_to_file(
         self,
@@ -23,7 +23,7 @@ class TTS:
         speaker_wav: Optional[str] = None,
         emotion: Optional[str] = None,
         speed: Optional[float] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> str: ...
     def tts(
         self,
@@ -33,5 +33,5 @@ class TTS:
         speaker_wav: Optional[str] = None,
         emotion: Optional[str] = None,
         speed: Optional[float] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> Any: ...

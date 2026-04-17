@@ -25,6 +25,7 @@ def _check_zeroconf() -> bool:
     if _zeroconf_available is None:
         try:
             import zeroconf  # noqa: F401
+
             _zeroconf_available = True
         except ImportError:
             _zeroconf_available = False
@@ -201,14 +202,17 @@ def discover_from_env() -> List[DiscoveredHA]:
     if url:
         # Parse URL to extract IP/port
         from urllib.parse import urlparse
+
         parsed = urlparse(url)
-        return [DiscoveredHA(
-            name="Home Assistant (from env)",
-            url=url.rstrip("/"),
-            ip=parsed.hostname or "localhost",
-            port=parsed.port or 8123,
-            source="env",
-        )]
+        return [
+            DiscoveredHA(
+                name="Home Assistant (from env)",
+                url=url.rstrip("/"),
+                ip=parsed.hostname or "localhost",
+                port=parsed.port or 8123,
+                source="env",
+            )
+        ]
     return []
 
 

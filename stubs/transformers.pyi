@@ -34,7 +34,7 @@ class BitsAndBytesConfig:
         bnb_4bit_compute_dtype: Any = None,
         bnb_4bit_quant_type: str = "nf4",
         bnb_4bit_use_double_quant: bool = False,
-        **kwargs: Any
+        **kwargs: Any,
     ): ...
 
 class pipeline:

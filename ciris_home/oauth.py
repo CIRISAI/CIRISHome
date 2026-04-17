@@ -81,7 +81,9 @@ async def authenticate_with_credentials(
             ) as resp:
                 if resp.status != 200:
                     error = await resp.text()
-                    logger.error(f"Failed to create login flow: {resp.status} - {error}")
+                    logger.error(
+                        f"Failed to create login flow: {resp.status} - {error}"
+                    )
                     return None
                 flow_response = await resp.json()
 

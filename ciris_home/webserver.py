@@ -12,9 +12,9 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from aiohttp import web, ClientSession, ClientTimeout
+from aiohttp import ClientSession, ClientTimeout, web
 
-from .installer import load_config, CIRISConfig
+from .installer import CIRISConfig, load_config
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,8 @@ def get_web_assets_dir() -> Optional[Path]:
     dev_paths = [
         Path.cwd() / "mobile-web/webApp/build/dist/wasmJs/developmentExecutable",
         Path.cwd() / "mobile-web/webApp/build/dist/wasmJs/productionExecutable",
-        package_dir.parent / "mobile-web/webApp/build/dist/wasmJs/developmentExecutable",
+        package_dir.parent
+        / "mobile-web/webApp/build/dist/wasmJs/developmentExecutable",
     ]
 
     for path in dev_paths:
@@ -109,11 +110,13 @@ class CIRISWebServer:
 
     async def _handle_health(self, request: web.Request) -> web.Response:
         """Health check endpoint."""
-        return web.json_response({
-            "status": "ok",
-            "ha_url": self.config.ha_url,
-            "has_token": bool(self.config.ha_token),
-        })
+        return web.json_response(
+            {
+                "status": "ok",
+                "ha_url": self.config.ha_url,
+                "has_token": bool(self.config.ha_token),
+            }
+        )
 
     async def _handle_setup(self, request: web.Request) -> web.Response:
         """Handle setup page with token injection."""
@@ -256,7 +259,11 @@ class CIRISWebServer:
                 # Filter response headers
                 response_headers = {}
                 for key, value in resp.headers.items():
-                    if key.lower() not in ("content-encoding", "transfer-encoding", "content-length"):
+                    if key.lower() not in (
+                        "content-encoding",
+                        "transfer-encoding",
+                        "content-length",
+                    ):
                         response_headers[key] = value
 
                 return web.Response(
