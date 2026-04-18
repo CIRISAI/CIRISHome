@@ -15,12 +15,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - uses: pre-commit/action@v3.0.0
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit with auto-fix
+        id: pre-commit
+        run: |
+          pre-commit run --all-files || echo "pre-commit-failed=true" >> $GITHUB_OUTPUT
         env:
-          SKIP: mypy,hadolint-docker,detect-secrets,prettier,shellcheck # Skip problematic hooks
+          SKIP: mypy,hadolint-docker,detect-secrets,prettier,shellcheck
+
+      - name: Commit auto-fixes (PRs only)
+        if: github.event_name == 'pull_request' && steps.pre-commit.outputs.pre-commit-failed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git diff --staged --quiet || git commit -m "🤖 Auto-fix: pre-commit formatting
+
+          Co-Authored-By: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+          git push
+
+      - name: Fail if fixes needed on push to main
+        if: github.event_name == 'push' && steps.pre-commit.outputs.pre-commit-failed == 'true'
+        run: |
+          echo "::error::Pre-commit checks failed. Run 'pre-commit run --all-files' locally and commit fixes."
+          exit 1
 
   test:
     name: Test Suite
@@ -176,13 +205,13 @@ jobs:
       - name: Run code quality checks
         run: |
           echo "Running flake8..."
-          flake8 modules/ main.py tools/ tests/ --max-line-length=88 --extend-ignore=E203,W503,D202,D200,D107,F811 --count --statistics
+          flake8 modules/ main.py tools/ tests/ scripts/ --max-line-length=88 --extend-ignore=E203,W503,D202,D200,D107,F811 --count --statistics
 
           echo "Checking black formatting..."
-          black --check modules/ tests/ main.py tools/ || true
+          black --check modules/ tests/ main.py tools/ scripts/ || true
 
           echo "Checking import sorting..."
-          isort --check modules/ tests/ main.py tools/ --profile black || true
+          isort --check modules/ tests/ main.py tools/ scripts/ --profile black || true
 
   deployment-readiness:
     name: Deployment Readiness
