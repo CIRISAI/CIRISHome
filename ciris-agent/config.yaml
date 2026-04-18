@@ -1,12 +1,12 @@
-name: CIRIS Agent
-version: "5.0.1"
-slug: ciris-agent
-description: CIRIS AI Agent for Home Assistant - Multi-modal AI home automation
-url: https://github.com/CIRISAI/CIRISHome
+name: "CIRIS Agent"
+description: "CIRIS AI Agent for Home Assistant - Multi-modal AI home automation"
+version: "6.0.0"
+slug: "ciris_agent"
+url: "https://github.com/CIRISAI/CIRISHome"
 arch:
   - aarch64
   - amd64
-  - armv7
+# Note: armv7 removed - deprecated in newer HA versions
 init: false
 ingress: true
 ingress_port: 8099
@@ -15,11 +15,12 @@ panel_icon: mdi:robot
 panel_title: CIRIS
 homeassistant_api: true
 hassio_api: true
+hassio_role: default
 auth_api: true
 startup: services
 ports:
   8099/tcp: null
 ports_description:
-  8099/tcp: CIRIS Agent Web UI (internal via ingress)
+  8099/tcp: "CIRIS Agent Web UI (internal via ingress)"
 options: {}
 schema: {}

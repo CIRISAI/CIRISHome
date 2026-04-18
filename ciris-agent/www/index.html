@@ -3,415 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIRIS - Home Assistant Integration</title>
+    <title>CIRIS</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #0A0A0F;
-            color: #fff;
-            font-family: system-ui, -apple-system, sans-serif;
-            min-height: 100vh;
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #0A0A0F;
+            overflow: hidden;
+        }
+        #loading {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            background: #0A0A0F;
+            color: #6B9AFF;
+            font-family: system-ui, -apple-system, sans-serif;
         }
-        .container { max-width: 600px; width: 100%; text-align: center; }
-        h1 { color: #6B9AFF; font-size: 3rem; margin-bottom: 0.5rem; }
-        .subtitle { color: rgba(255,255,255,0.6); margin-bottom: 2rem; }
-        .card {
-            background: #12121A;
-            border-radius: 12px;
-            padding: 24px;
-            margin: 16px 0;
-            text-align: left;
-        }
-        .card h2 { color: #6B9AFF; margin-bottom: 16px; font-size: 1.2rem; }
-        .status-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #1A1A24;
-        }
-        .status-row:last-child { border-bottom: none; }
-        .status-label { color: rgba(255,255,255,0.7); }
-        .status-value { font-weight: 500; }
-        .status-ok { color: #4CAF50; }
-        .status-error { color: #f44336; }
-        .status-pending { color: #FFA726; }
-
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; margin-bottom: 8px; color: rgba(255,255,255,0.8); }
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            background: #1A1A24;
-            border: 1px solid #2A2A34;
-            border-radius: 8px;
-            color: #fff;
-            font-size: 14px;
-        }
-        .form-group input:focus { outline: none; border-color: #6B9AFF; }
-
-        .btn {
-            background: #6B9AFF;
-            color: #fff;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 16px;
-        }
-        .btn:hover { background: #5A89EE; }
-        .btn:disabled { background: #3A3A44; cursor: not-allowed; }
-
+        #loading h1 { font-size: 48px; margin-bottom: 16px; }
+        #loading p { color: rgba(255,255,255,0.6); }
         .spinner {
-            width: 24px; height: 24px;
+            width: 40px; height: 40px;
             border: 3px solid #1A1A24;
             border-top-color: #6B9AFF;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            display: inline-block;
+            margin-top: 24px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-
-        .hidden { display: none !important; }
-        .step { display: none; }
-        .step.active { display: block; }
-
-        .chat-container {
-            background: #12121A;
-            border-radius: 12px;
-            height: 400px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px;
-        }
-        .chat-input-row {
-            display: flex;
-            padding: 12px;
-            background: #1A1A24;
-            gap: 8px;
-        }
-        .chat-input {
-            flex: 1;
-            padding: 12px;
-            background: #0A0A0F;
-            border: 1px solid #2A2A34;
-            border-radius: 8px;
-            color: #fff;
-        }
-        .message {
-            margin: 8px 0;
-            padding: 12px;
-            border-radius: 8px;
-            max-width: 80%;
-        }
-        .message.user { background: #6B9AFF; margin-left: auto; }
-        .message.assistant { background: #1A1A24; }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div id="loading">
         <h1>CIRIS</h1>
-        <p class="subtitle">Home Assistant Integration</p>
-
-        <!-- Step 1: Status Check -->
-        <div id="step-status" class="step active">
-            <div class="card">
-                <h2>System Status</h2>
-                <div id="status-content">
-                    <div style="text-align: center; padding: 20px;">
-                        <div class="spinner"></div>
-                        <p style="margin-top: 12px; color: rgba(255,255,255,0.6);">Checking connection...</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Step 2: Configuration -->
-        <div id="step-config" class="step">
-            <div class="card">
-                <h2>Configure CIRIS</h2>
-                <form id="config-form">
-                    <div class="form-group">
-                        <label>LLM Provider</label>
-                        <select id="llm-provider">
-                            <option value="anthropic">Anthropic (Claude)</option>
-                            <option value="jetson">Jetson Nano (Local)</option>
-                            <option value="ollama">Ollama (Local)</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="api-key-group">
-                        <label>API Key</label>
-                        <input type="password" id="api-key" placeholder="sk-ant-...">
-                    </div>
-                    <div class="form-group hidden" id="jetson-group">
-                        <label>Jetson Nano IP</label>
-                        <input type="text" id="jetson-ip" placeholder="192.168.1.100">
-                    </div>
-                    <div class="form-group">
-                        <label>Model</label>
-                        <select id="model-select">
-                            <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-                            <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn">Save & Continue</button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Step 3: Chat -->
-        <div id="step-chat" class="step">
-            <div class="chat-container">
-                <div class="chat-messages" id="chat-messages">
-                    <div class="message assistant">
-                        Hello! I'm CIRIS, your Home Assistant AI. I can help control your smart home devices, answer questions, and automate your home. What would you like to do?
-                    </div>
-                </div>
-                <div class="chat-input-row">
-                    <input type="text" class="chat-input" id="chat-input" placeholder="Type a message...">
-                    <button class="btn" style="width: auto;" id="send-btn">Send</button>
-                </div>
-            </div>
-        </div>
+        <p>Loading...</p>
+        <div class="spinner"></div>
     </div>
-
+    <script src="ciris-web.js"></script>
     <script>
-        const API_BASE = '';  // Same origin via ingress
-        let config = {};
-
-        async function checkStatus() {
-            try {
-                const [healthRes, ingressRes] = await Promise.all([
-                    fetch('health'),
-                    fetch('ingress-config')
-                ]);
-
-                const health = await healthRes.json();
-                const ingress = await ingressRes.json();
-
-                config.ingress = ingress;
-                config.haConnected = health.ha_status === 'connected';
-                config.supervisorToken = health.supervisor_token === 'present';
-
-                // Check for saved config
-                const savedConfig = localStorage.getItem('ciris_config');
-                if (savedConfig) {
-                    config = { ...config, ...JSON.parse(savedConfig) };
-                }
-
-                renderStatus(health, ingress);
-
-            } catch (e) {
-                document.getElementById('status-content').innerHTML = `
-                    <div class="status-row">
-                        <span class="status-label">Error</span>
-                        <span class="status-value status-error">${e.message}</span>
-                    </div>
-                `;
-            }
-        }
-
-        function renderStatus(health, ingress) {
-            const hasConfig = config.apiKey || config.jetsonIp;
-
-            document.getElementById('status-content').innerHTML = `
-                <div class="status-row">
-                    <span class="status-label">Home Assistant</span>
-                    <span class="status-value ${health.ha_status === 'connected' ? 'status-ok' : 'status-error'}">
-                        ${health.ha_status === 'connected' ? 'Connected' : health.ha_status}
-                    </span>
-                </div>
-                <div class="status-row">
-                    <span class="status-label">Supervisor API</span>
-                    <span class="status-value ${health.supervisor_token === 'present' ? 'status-ok' : 'status-error'}">
-                        ${health.supervisor_token === 'present' ? 'Available' : 'Missing'}
-                    </span>
-                </div>
-                <div class="status-row">
-                    <span class="status-label">LLM Configuration</span>
-                    <span class="status-value ${hasConfig ? 'status-ok' : 'status-pending'}">
-                        ${hasConfig ? (config.provider || 'Configured') : 'Not configured'}
-                    </span>
-                </div>
-            `;
-
-            // Add continue button
-            const btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.textContent = hasConfig ? 'Open Chat' : 'Configure';
-            btn.onclick = () => {
-                if (hasConfig) {
-                    showStep('step-chat');
-                } else {
-                    showStep('step-config');
-                }
-            };
-            document.getElementById('status-content').appendChild(btn);
-        }
-
-        function showStep(stepId) {
-            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-            document.getElementById(stepId).classList.add('active');
-        }
-
-        // LLM provider toggle
-        document.getElementById('llm-provider').addEventListener('change', function() {
-            const apiKeyGroup = document.getElementById('api-key-group');
-            const jetsonGroup = document.getElementById('jetson-group');
-            const modelSelect = document.getElementById('model-select');
-
-            if (this.value === 'anthropic') {
-                apiKeyGroup.classList.remove('hidden');
-                jetsonGroup.classList.add('hidden');
-                modelSelect.innerHTML = `
-                    <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-                    <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-                `;
-            } else if (this.value === 'jetson') {
-                apiKeyGroup.classList.add('hidden');
-                jetsonGroup.classList.remove('hidden');
-                modelSelect.innerHTML = `
-                    <option value="llama-4-scout-int4">Llama 4 Scout (INT4)</option>
-                `;
-            } else {
-                apiKeyGroup.classList.add('hidden');
-                jetsonGroup.classList.remove('hidden');
-                modelSelect.innerHTML = `
-                    <option value="llama3.2">Llama 3.2</option>
-                    <option value="mistral">Mistral</option>
-                `;
-            }
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var loading = document.getElementById('loading');
+                if (loading) loading.style.display = 'none';
+            }, 500);
         });
-
-        // Config form submit
-        document.getElementById('config-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const provider = document.getElementById('llm-provider').value;
-            const model = document.getElementById('model-select').value;
-
-            config.provider = provider;
-            config.model = model;
-
-            if (provider === 'anthropic') {
-                config.apiKey = document.getElementById('api-key').value;
-            } else {
-                config.jetsonIp = document.getElementById('jetson-ip').value;
-            }
-
-            localStorage.setItem('ciris_config', JSON.stringify(config));
-            showStep('step-chat');
-        });
-
-        // Chat functionality
-        document.getElementById('send-btn').addEventListener('click', sendMessage);
-        document.getElementById('chat-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendMessage();
-        });
-
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            if (!message) return;
-
-            input.value = '';
-            addMessage(message, 'user');
-
-            try {
-                // For now, just echo - will integrate with actual LLM
-                const response = await callLLM(message);
-                addMessage(response, 'assistant');
-            } catch (e) {
-                addMessage('Error: ' + e.message, 'assistant');
-            }
-        }
-
-        function addMessage(text, role) {
-            const container = document.getElementById('chat-messages');
-            const msg = document.createElement('div');
-            msg.className = 'message ' + role;
-            msg.textContent = text;
-            container.appendChild(msg);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        async function callLLM(message) {
-            // First, get HA state for context
-            let haContext = '';
-            try {
-                const statesRes = await fetch('api/states');
-                if (statesRes.ok) {
-                    const states = await statesRes.json();
-                    const summary = states.slice(0, 10).map(s =>
-                        `${s.entity_id}: ${s.state}`
-                    ).join('\n');
-                    haContext = `\nCurrent Home Assistant state (sample):\n${summary}`;
-                }
-            } catch (e) {
-                console.log('Could not fetch HA states:', e);
-            }
-
-            if (config.provider === 'anthropic' && config.apiKey) {
-                const res = await fetch('https://api.anthropic.com/v1/messages', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-api-key': config.apiKey,
-                        'anthropic-version': '2023-06-01',
-                        'anthropic-dangerous-direct-browser-access': 'true'
-                    },
-                    body: JSON.stringify({
-                        model: config.model || 'claude-sonnet-4-20250514',
-                        max_tokens: 1024,
-                        system: `You are CIRIS, a helpful Home Assistant AI. You help users control their smart home.${haContext}`,
-                        messages: [{ role: 'user', content: message }]
-                    })
-                });
-
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.error?.message || 'API error');
-                }
-
-                const data = await res.json();
-                return data.content[0].text;
-            } else {
-                // Local LLM via Jetson/Ollama
-                const endpoint = config.jetsonIp
-                    ? `http://${config.jetsonIp}:11434/api/chat`
-                    : 'http://localhost:11434/api/chat';
-
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        model: config.model || 'llama-4-scout-int4',
-                        messages: [
-                            { role: 'system', content: `You are CIRIS, a Home Assistant AI.${haContext}` },
-                            { role: 'user', content: message }
-                        ],
-                        stream: false
-                    })
-                });
-
-                const data = await res.json();
-                return data.message?.content || 'No response';
-            }
-        }
-
-        // Initialize
-        checkStatus();
     </script>
 </body>
 </html>

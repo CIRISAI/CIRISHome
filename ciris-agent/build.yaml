@@ -1,4 +1,16 @@
+# Build configuration for CIRIS Agent Home Assistant Addon
+#
+# Base images: https://github.com/home-assistant/docker-base
+# These include S6-overlay, bashio, and other HA addon essentials
+#
+# Note: armv7 removed - deprecated in newer HA Supervisor versions
+
 build_from:
   aarch64: ghcr.io/home-assistant/aarch64-base:3.19
   amd64: ghcr.io/home-assistant/amd64-base:3.19
-  armv7: ghcr.io/home-assistant/armv7-base:3.19
+
+labels:
+  org.opencontainers.image.title: "CIRIS Agent"
+  org.opencontainers.image.description: "CIRIS AI Agent for Home Assistant"
+  org.opencontainers.image.source: "https://github.com/CIRISAI/CIRISHome"
+  org.opencontainers.image.licenses: "AGPL-3.0"
