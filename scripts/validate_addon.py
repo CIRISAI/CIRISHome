@@ -7,8 +7,8 @@ This script is used by pre-commit to ensure:
 3. Required fields are present
 """
 
-import sys
 import re
+import sys
 from pathlib import Path
 
 import yaml
