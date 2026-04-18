@@ -1,4 +1,5 @@
 """CIRIS conversation agent with context profile support."""
+
 import logging
 import re
 from typing import Any, Literal, Optional
@@ -26,7 +27,6 @@ from .const import (
     LANGUAGES,
     RESPONSE_STYLES,
     ROOM_TYPES,
-    SAFETY_LEVELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -132,7 +132,9 @@ class CIRISAgent(conversation.AbstractConversationAgent):
             instructions.append(self.custom_instructions)
 
         # Final instruction
-        instructions.append("Please SPEAK naturally and include any actions in your response.")
+        instructions.append(
+            "Please SPEAK naturally and include any actions in your response."
+        )
 
         return " ".join(instructions)
 
@@ -199,9 +201,9 @@ class CIRISAgent(conversation.AbstractConversationAgent):
                 )
             except Exception as e:
                 _LOGGER.error("Failed to get CIRIS status: %s", e)
-                intent_response.async_set_speech(
-                    "I'm having trouble connecting to CIRIS. Please check the configuration."
-                )
+                msg = "I'm having trouble connecting to CIRIS. "
+                msg += "Please check the configuration."
+                intent_response.async_set_speech(msg)
                 return conversation.ConversationResult(
                     response=intent_response,
                     conversation_id=user_input.conversation_id or ulid.ulid(),
@@ -211,9 +213,10 @@ class CIRISAgent(conversation.AbstractConversationAgent):
             device_info = await self._get_device_info()
 
             # Build context for CIRIS with profile settings
+            conv_id = user_input.conversation_id or "default"
             context = {
                 "source": "homeassistant",
-                "channel_id": f"{self.channel}_{self.profile_name}_{user_input.conversation_id or 'default'}",
+                "channel_id": f"{self.channel}_{self.profile_name}_{conv_id}",
                 "input_method": "voice" if user_input.conversation_id else "text",
                 "language": self.language,
                 "hass_context": {
@@ -237,13 +240,16 @@ class CIRISAgent(conversation.AbstractConversationAgent):
 
             # Send to CIRIS using the SDK
             try:
+                profile = self.profile_name
                 enhanced_message = (
                     f"{user_input.text}\n\n"
-                    f"[This was received via API from Home Assistant ({self.profile_name}), "
-                    f"please SPEAK to service this authorized request, thank you!]"
+                    f"[Received via Home Assistant ({profile}), "
+                    f"please SPEAK to service this request, thank you!]"
                 )
 
-                _LOGGER.debug("CIRIS: Sending message with context profile: %s", context)
+                _LOGGER.debug(
+                    "CIRIS: Sending message with context profile: %s", context
+                )
                 response = await client.agent.interact(
                     message=enhanced_message, context=context
                 )

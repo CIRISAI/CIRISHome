@@ -1,26 +1,33 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Optional, Dict
+from typing import Any, Dict, Optional
 
-from .transport import Transport
-from .resources.agent import AgentResource, InteractResponse, AgentStatus, AgentIdentity, ConversationHistory
+from .exceptions import CIRISConnectionError, CIRISTimeoutError
+from .resources.agent import (
+    AgentIdentity,
+    AgentResource,
+    AgentStatus,
+    ConversationHistory,
+    InteractResponse,
+)
 from .resources.audit import AuditResource
-from .resources.memory import MemoryResource
-from .resources.system import SystemResource
-from .resources.telemetry import TelemetryResource
 from .resources.auth import AuthResource
-from .resources.wa import WiseAuthorityResource
 from .resources.config import ConfigResource
 from .resources.emergency import EmergencyResource
 from .resources.jobs import JobsResource
-from .exceptions import CIRISTimeoutError, CIRISConnectionError
-from .websocket import WebSocketClient, EventChannel
+from .resources.memory import MemoryResource
+from .resources.system import SystemResource
+from .resources.telemetry import TelemetryResource
+from .resources.wa import WiseAuthorityResource
+from .transport import Transport
+from .websocket import EventChannel, WebSocketClient
+
 
 class CIRISClient:
     """
     Main client for interacting with CIRIS v1 API (Pre-Beta).
-    
+
     **WARNING**: This SDK is for the v1 API which is in pre-beta stage.
     The API and SDK interfaces may change without notice.
     No backwards compatibility is guaranteed.
@@ -37,7 +44,7 @@ class CIRISClient:
             # Get agent status
             status = await client.status()
             print(f"Agent state: {status.cognitive_state}")
-    
+
     Note: All endpoints are under /v1/ prefix except the emergency shutdown endpoint.
     """
 
@@ -66,7 +73,9 @@ class CIRISClient:
         self.max_retries = max_retries
         self.use_auth_store = use_auth_store
         self.rate_limit = rate_limit
-        self._transport = Transport(base_url, api_key, timeout, use_auth_store, rate_limit)
+        self._transport = Transport(
+            base_url, api_key, timeout, use_auth_store, rate_limit
+        )
 
         # Core resources matching v1 API structure
         # Note: Many endpoints have been consolidated in the v1 API
@@ -80,7 +89,7 @@ class CIRISClient:
         self.config = ConfigResource(self._transport)
         self.emergency = EmergencyResource(self._transport)  # NEW: Emergency operations
         self.jobs = JobsResource(self._transport)  # NEW: Async job management
-        
+
         # Legacy resource references for backwards compatibility
         # These will be removed in future versions
         self.runtime = self.system  # Deprecated: use client.system
@@ -92,18 +101,18 @@ class CIRISClient:
 
     async def __aexit__(self, exc_type, exc, tb):
         await self._transport.__aexit__(exc_type, exc, tb)
-    
+
     def set_api_key(self, api_key: Optional[str], persist: bool = True) -> None:
         """
         Set or update the API key.
-        
+
         Args:
             api_key: The API key to use (None to clear)
             persist: Whether to store persistently (default: True)
         """
         self.api_key = api_key
         self._transport.set_api_key(api_key, persist)
-    
+
     def clear_stored_auth(self) -> None:
         """Clear any stored authentication data for this server."""
         if self.use_auth_store and self._transport.auth_store:
@@ -115,13 +124,15 @@ class CIRISClient:
                 return await self._transport.request(method, path, **kwargs)
             except CIRISConnectionError:
                 if attempt < self.max_retries - 1:
-                    await asyncio.sleep(2 ** attempt)
+                    await asyncio.sleep(2**attempt)
                 else:
                     raise
 
     # Convenience methods for primary agent interactions
 
-    async def interact(self, message: str, context: Optional[Dict[str, Any]] = None) -> InteractResponse:
+    async def interact(
+        self, message: str, context: Optional[Dict[str, Any]] = None
+    ) -> InteractResponse:
         """Send message and get response from agent.
 
         This is the primary method for interacting with the agent.
@@ -177,48 +188,48 @@ class CIRISClient:
             AgentStatus with current state information
         """
         return await self.agent.get_status()
-    
+
     def create_websocket(
-        self, 
+        self,
         channels: Optional[List[EventChannel]] = None,
         reconnect: bool = True,
-        heartbeat_interval: float = 30.0
+        heartbeat_interval: float = 30.0,
     ) -> WebSocketClient:
         """
         Create a WebSocket client for real-time streaming.
-        
+
         The WebSocket client provides real-time updates with:
         - Automatic reconnection on disconnect
         - Channel-based event filtering
         - Health monitoring with heartbeat
-        
+
         Args:
             channels: List of channels to subscribe to (default: all)
             reconnect: Whether to auto-reconnect (default: True)
             heartbeat_interval: Heartbeat interval in seconds (default: 30)
-            
+
         Returns:
             WebSocketClient instance
-            
+
         Example:
             # Create WebSocket for specific channels
             ws = client.create_websocket(channels=[
                 EventChannel.AGENT_STATE,
                 EventChannel.SYSTEM_HEALTH
             ])
-            
+
             # Register event handlers
             @ws.on("message")
             async def on_message(data):
                 print(f"Received: {data}")
-            
+
             @ws.on("channel:agent.state")
             async def on_state_change(data):
                 print(f"State changed: {data}")
-            
+
             # Connect and listen
             await ws.connect()
-            
+
             # Later: close connection
             await ws.close()
         """
@@ -228,7 +239,7 @@ class CIRISClient:
             channels=channels,
             reconnect=reconnect,
             heartbeat_interval=heartbeat_interval,
-            use_auth_store=self.use_auth_store
+            use_auth_store=self.use_auth_store,
         )
 
     async def identity(self) -> AgentIdentity:

@@ -5,6 +5,7 @@ The Wise Authority (WA) client provides a simplified interface for human-in-the-
 ## Overview
 
 The WA client focuses on three core endpoints:
+
 - **Deferrals**: View and resolve agent decision deferrals
 - **Permissions**: Manage agent permissions
 - **Integrated Guidance**: Provide guidance directly when resolving deferrals
@@ -24,6 +25,7 @@ async with CIRISClient(base_url="http://localhost:8080") as client:
 ### Working with Deferrals
 
 #### Get Deferrals
+
 ```python
 # Get all deferrals
 all_deferrals = await client.wa.get_deferrals()
@@ -37,6 +39,7 @@ pending_list = await client.wa.get_pending_deferrals()
 ```
 
 #### Resolve Deferrals
+
 ```python
 # Approve with guidance
 await client.wa.approve_deferral(
@@ -82,6 +85,7 @@ api_perms = await client.wa.get_permissions(
 ## Response Formats
 
 ### Deferral Response
+
 ```python
 {
     "deferrals": [
@@ -103,6 +107,7 @@ api_perms = await client.wa.get_permissions(
 ```
 
 ### Resolution Response
+
 ```python
 {
     "id": "def_123",
@@ -116,6 +121,7 @@ api_perms = await client.wa.get_permissions(
 ```
 
 ### Permissions Response
+
 ```python
 {
     "permissions": [

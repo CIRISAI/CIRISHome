@@ -1,4 +1,5 @@
 """Config flow for CIRIS integration with sub-entries for context profiles."""
+
 import logging
 from typing import Any
 
@@ -16,6 +17,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from .ciris_ha_client import CIRISClient
+from .ciris_sdk.exceptions import CIRISError, CIRISTimeoutError
 from .const import (
     CONF_API_KEY,
     CONF_API_URL,
@@ -41,9 +44,6 @@ from .const import (
     ROOM_TYPES,
     SAFETY_LEVELS,
 )
-
-from .ciris_ha_client import CIRISClient
-from .ciris_sdk.exceptions import CIRISError, CIRISTimeoutError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class CIRISConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> None:
         """Test the API connection."""
         if not api_key:
-            api_key = "admin:ciris_admin_password"
+            api_key = "admin:ciris_admin_password"  # pragma: allowlist secret
 
         client = CIRISClient(
             base_url=api_url,

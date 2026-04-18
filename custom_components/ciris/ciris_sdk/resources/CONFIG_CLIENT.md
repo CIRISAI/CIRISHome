@@ -5,6 +5,7 @@ The Config client provides a simple interface for managing CIRIS configuration t
 ## Overview
 
 The config client supports:
+
 - Listing all configurations with role-based filtering
 - Getting specific configuration values
 - Setting/updating configuration values
@@ -21,17 +22,17 @@ from ciris_sdk.client import CIRISClient
 async with CIRISClient(base_url="http://localhost:8080") as client:
     # List all configs
     configs = await client.config.list_configs()
-    
+
     # Get specific config
     value = await client.config.get_config("llm.model")
-    
+
     # Set config
     result = await client.config.set_config(
         key="app.feature_flag",
         value=True,
         description="Enable new feature"
     )
-    
+
     # Delete config
     result = await client.config.delete_config("app.old_setting")
 ```
@@ -39,25 +40,31 @@ async with CIRISClient(base_url="http://localhost:8080") as client:
 ## API Methods
 
 ### list_configs(include_sensitive=False)
+
 List all configuration items. Sensitive values are automatically redacted based on your role.
 
 **Parameters:**
+
 - `include_sensitive` (bool): Attempt to retrieve sensitive values (requires ADMIN role)
 
 **Returns:** List[ConfigItem]
 
 ### get_config(key)
+
 Get a specific configuration value by key.
 
 **Parameters:**
+
 - `key` (str): The configuration key to retrieve
 
 **Returns:** ConfigValue
 
 ### set_config(key, value, description=None, sensitive=False)
+
 Set or update a configuration value.
 
 **Parameters:**
+
 - `key` (str): The configuration key
 - `value` (Any): The value to set (must be JSON-serializable)
 - `description` (str, optional): Description of the configuration
@@ -66,28 +73,35 @@ Set or update a configuration value.
 **Returns:** ConfigOperationResponse
 
 ### delete_config(key)
+
 Delete a configuration key. Requires ADMIN role or higher.
 
 **Parameters:**
+
 - `key` (str): The configuration key to delete
 
 **Returns:** ConfigOperationResponse
 
 ### update_config(key, value, description=None)
+
 Alias for set_config() for convenience.
 
 ### bulk_set(configs)
+
 Set multiple configuration values at once.
 
 **Parameters:**
+
 - `configs` (Dict[str, Any]): Dictionary mapping keys to values
 
 **Returns:** Dict[str, ConfigOperationResponse]
 
 ### search_configs(pattern)
+
 Search for configuration keys matching a pattern (client-side).
 
 **Parameters:**
+
 - `pattern` (str): Search pattern (supports wildcards like `llm.*`)
 
 **Returns:** List[ConfigItem]
@@ -106,6 +120,7 @@ Sensitive configurations are automatically redacted for users without appropriat
 ## Examples
 
 ### Basic Configuration Management
+
 ```python
 # Get current LLM model
 llm_config = await client.config.get_config("llm.model")
@@ -118,6 +133,7 @@ if result.success:
 ```
 
 ### Working with Sensitive Configs
+
 ```python
 # List configs, sensitive values will be redacted
 configs = await client.config.list_configs()
@@ -135,6 +151,7 @@ except CIRISAPIError as e:
 ```
 
 ### Bulk Operations
+
 ```python
 # Update multiple related configs at once
 app_configs = {
@@ -150,6 +167,7 @@ print(f"Updated {successful}/{len(app_configs)} configurations")
 ```
 
 ### Pattern Search
+
 ```python
 # Find all LLM-related configurations
 llm_configs = await client.config.search_configs("llm.*")
@@ -184,13 +202,13 @@ except CIRISAPIError as e:
 
 If migrating from the old runtime config endpoints:
 
-| Old Endpoint | New Method |
-|-------------|------------|
-| GET /v1/runtime/config | client.config.list_configs() |
-| GET /v1/runtime/config?path=X | client.config.get_config(X) |
-| PUT /v1/runtime/config | client.config.set_config() |
+| Old Endpoint                     | New Method                       |
+| -------------------------------- | -------------------------------- |
+| GET /v1/runtime/config           | client.config.list_configs()     |
+| GET /v1/runtime/config?path=X    | client.config.get_config(X)      |
+| PUT /v1/runtime/config           | client.config.set_config()       |
 | POST /v1/runtime/config/validate | (Removed - validation automatic) |
-| GET /v1/config/values/{key} | client.config.get_config(key) |
-| GET /v1/config/{key}/history | (Removed - use audit logs) |
+| GET /v1/config/values/{key}      | client.config.get_config(key)    |
+| GET /v1/config/{key}/history     | (Removed - use audit logs)       |
 
 The new config client is simpler and more consistent with RESTful conventions.

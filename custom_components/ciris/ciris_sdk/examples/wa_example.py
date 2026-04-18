@@ -1,5 +1,7 @@
 """Example usage of the Wise Authority SDK client."""
+
 import asyncio
+
 from ciris_sdk import CIRISClient
 
 
@@ -21,13 +23,13 @@ async def main():
 
         # 2. Resolve a deferral with guidance
         if pending:
-            deferral_id = pending[0]['id']
+            deferral_id = pending[0]["id"]
             print(f"\n=== Resolving Deferral {deferral_id} ===")
 
             # Approve with guidance
             result = await client.wa.approve_deferral(
                 deferral_id=deferral_id,
-                guidance="Please proceed with the request, but ensure to validate all inputs and maintain user privacy."
+                guidance="Please proceed with the request, but ensure to validate all inputs and maintain user privacy.",
             )
             print(f"Resolution: {result['resolution']}")
             print(f"Resolved at: {result['resolved_at']}")
@@ -35,7 +37,7 @@ async def main():
         # 3. Get current permissions
         print("\n=== Getting Current Permissions ===")
         permissions = await client.wa.get_permissions()
-        for perm in permissions.get('permissions', []):
+        for perm in permissions.get("permissions", []):
             print(f"- Resource: {perm['resource_type']}")
             print(f"  Permission: {perm['permission_type']}")
             print(f"  Granted by: {perm['granted_by']}")
@@ -54,16 +56,16 @@ async def main():
         if len(pending) > 1:
             # Reject example
             await client.wa.reject_deferral(
-                deferral_id=pending[1]['id'],
-                reasoning="This action violates our content policy and could harm users."
+                deferral_id=pending[1]["id"],
+                reasoning="This action violates our content policy and could harm users.",
             )
 
         if len(pending) > 2:
             # Modify example
             await client.wa.modify_deferral(
-                deferral_id=pending[2]['id'],
+                deferral_id=pending[2]["id"],
                 guidance="Instead of the requested action, please provide a helpful explanation of why this cannot be done.",
-                reasoning="The original request needs modification to align with safety guidelines."
+                reasoning="The original request needs modification to align with safety guidelines.",
             )
 
 

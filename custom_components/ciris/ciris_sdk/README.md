@@ -27,11 +27,11 @@ async def main():
         # Simple interaction - no auth required for OBSERVER access
         response = await client.interact("Hello, CIRIS!")
         print(response.response)
-        
+
         # Get agent status
         status = await client.status()
         print(f"Agent state: {status.cognitive_state}")
-        
+
         # Ask a question (returns just the text)
         answer = await client.ask("What is 2 + 2?")
         print(answer)  # "4"
@@ -42,6 +42,7 @@ async def main():
 The SDK provides simplified access to the core agent interaction endpoints:
 
 ### Interact with the Agent
+
 ```python
 # Send message and get response with metadata
 response = await client.interact("Tell me about quantum computing")
@@ -57,6 +58,7 @@ response = await client.interact(
 ```
 
 ### Get Conversation History
+
 ```python
 # Get recent conversation history
 history = await client.history(limit=50)
@@ -66,6 +68,7 @@ for msg in history.messages:
 ```
 
 ### Check Agent Status
+
 ```python
 # Get comprehensive status
 status = await client.status()
@@ -76,6 +79,7 @@ print(f"Memory: {status.memory_usage_mb}MB")
 ```
 
 ### Get Agent Identity
+
 ```python
 # Get identity and capabilities
 identity = await client.identity()
@@ -90,6 +94,7 @@ The SDK provides comprehensive authentication support with role-based access con
 Many endpoints work without authentication (OBSERVER access), but some operations require login:
 
 ### Login
+
 ```python
 # Login with username/password
 await client.login("root", "changeme")
@@ -100,6 +105,7 @@ response = await client.interact("What admin functions are available?")
 ```
 
 ### Get Current User
+
 ```python
 # Get current user info including permissions
 user = await client.auth.get_current_user()
@@ -109,6 +115,7 @@ print(f"Permissions: {user.permissions}")
 ```
 
 ### Check Permissions
+
 ```python
 # Check if authenticated
 is_auth = await client.auth.is_authenticated()
@@ -121,6 +128,7 @@ role = await client.auth.get_role()
 ```
 
 ### Token Management
+
 ```python
 # Refresh token before expiry
 refresh_response = await client.auth.refresh_token()
@@ -140,17 +148,17 @@ async def main():
         # Basic interaction (no auth needed)
         response = await client.interact("Hello!")
         print(f"Agent: {response.response}")
-        
+
         # Check status
         status = await client.status()
         print(f"State: {status.cognitive_state}")
-        
+
         # Login for admin functions
         await client.login("admin", "password")
-        
+
         # Access protected resources
         # ... admin operations ...
-        
+
         # Logout
         await client.logout()
 
@@ -173,7 +181,7 @@ CIRIS uses a 4-role model with increasing privileges:
    - Trigger analysis
 
 3. **AUTHORITY**: Strategic decisions
-   - All ADMIN permissions  
+   - All ADMIN permissions
    - Resolve deferrals
    - Provide guidance
    - Grant permissions
@@ -188,7 +196,7 @@ CIRIS uses a 4-role model with increasing privileges:
 The SDK also provides access to all system resources:
 
 - `client.agent` - Agent interaction (primary interface)
-- `client.memory` - Graph memory operations  
+- `client.memory` - Graph memory operations
 - `client.system` - System operations (health, time, resources, runtime, services, shutdown)
 - `client.telemetry` - Metrics and observability
 - `client.auth` - Authentication management
@@ -205,7 +213,7 @@ The v1 API consolidates many endpoints:
 
 - `/v1/runtime/*` → Use `client.system`
 - `/v1/services/*` → Use `client.system.services()`
-- `/v1/logs/*` → Use `client.telemetry.logs()` 
+- `/v1/logs/*` → Use `client.telemetry.logs()`
 - `/v1/visibility/*` → Use `client.telemetry.traces()`
 - `/v1/tools/*` → Part of `client.agent.identity()`
 

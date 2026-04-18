@@ -4,7 +4,7 @@ DOMAIN = "ciris"
 
 # Configuration - Parent entry (API connection)
 CONF_API_URL = "api_url"
-CONF_API_KEY = "api_key"
+CONF_API_KEY = "api_key"  # pragma: allowlist secret
 CONF_TIMEOUT = "timeout"
 CONF_CHANNEL = "channel"
 

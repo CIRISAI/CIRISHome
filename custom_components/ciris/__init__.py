@@ -1,7 +1,7 @@
 """The CIRIS AI Assistant integration with context profile sub-entries."""
+
 import logging
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
@@ -12,9 +12,7 @@ from .ciris_ha_client import CIRISClient
 from .const import (
     CONF_API_KEY,
     CONF_API_URL,
-    CONF_CHANNEL,
     CONF_TIMEOUT,
-    DEFAULT_CHANNEL,
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
@@ -40,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     timeout = entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
     if not api_key:
-        api_key = "admin:ciris_admin_password"
+        api_key = "admin:ciris_admin_password"  # pragma: allowlist secret
 
     client = CIRISClient(
         base_url=api_url,

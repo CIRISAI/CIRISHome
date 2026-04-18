@@ -4,14 +4,15 @@ Configuration resource for CIRIS v1 API (Pre-Beta).
 **WARNING**: This SDK is for the v1 API which is in pre-beta stage.
 The API interfaces may change without notice.
 """
+
 from __future__ import annotations
 
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from ..models import ConfigItem, ConfigValue, ConfigOperationResponse
-from ..transport import Transport
 from ..exceptions import CIRISAPIError
+from ..models import ConfigItem, ConfigOperationResponse, ConfigValue
+from ..transport import Transport
 
 
 class ConfigResource:
@@ -43,19 +44,21 @@ class ConfigResource:
             params["include_sensitive"] = "true"
 
         data = await self._transport.request("GET", "/v1/config", params=params)
-        
+
         # Handle both dict and list responses
         if isinstance(data, dict):
             # Convert dict to list of ConfigItems
             configs = []
             for key, value in data.items():
-                configs.append(ConfigItem(
-                    key=key,
-                    value=value,
-                    description=None,
-                    sensitive=False,
-                    redacted=False
-                ))
+                configs.append(
+                    ConfigItem(
+                        key=key,
+                        value=value,
+                        description=None,
+                        sensitive=False,
+                        redacted=False,
+                    )
+                )
             return configs
         else:
             # Assume it's already a list
@@ -91,7 +94,7 @@ class ConfigResource:
             description=data.get("description"),
             sensitive=data.get("is_sensitive", False),
             last_modified=data.get("updated_at"),
-            modified_by=data.get("updated_by")
+            modified_by=data.get("updated_by"),
         )
 
     async def set_config(
@@ -99,7 +102,7 @@ class ConfigResource:
         key: str,
         value: Any,
         description: Optional[str] = None,
-        sensitive: bool = False
+        sensitive: bool = False,
     ) -> ConfigOperationResponse:
         """Set or update a configuration value using PATCH.
 
@@ -118,11 +121,11 @@ class ConfigResource:
         Note:
             Setting configuration requires appropriate permissions.
             Sensitive configurations require ADMIN role or higher.
-            
+
         Example:
             # Update just the value
             await client.config.set_config("api.timeout", 30)
-            
+
             # Set with description
             await client.config.set_config(
                 "api.key",
@@ -131,16 +134,13 @@ class ConfigResource:
                 sensitive=True
             )
         """
-        payload = {
-            "value": value,
-            "sensitive": sensitive
-        }
+        payload = {"value": value, "sensitive": sensitive}
         if description:
             payload["description"] = description
 
         # Use PUT for updates (API doesn't support PATCH yet)
         data = await self._transport.request("PUT", f"/v1/config/{key}", json=payload)
-        
+
         # Convert ConfigItemResponse to ConfigOperationResponse
         if "key" in data and "value" in data:
             # This is a ConfigItemResponse, convert it
@@ -150,7 +150,7 @@ class ConfigResource:
                 timestamp=data.get("updated_at", datetime.now().isoformat()),
                 key=data.get("key"),
                 new_value=data.get("value"),
-                message=f"Config '{key}' updated successfully"
+                message=f"Config '{key}' updated successfully",
             )
         else:
             # Already in the expected format
@@ -173,10 +173,7 @@ class ConfigResource:
         return ConfigOperationResponse(**data)
 
     async def update_config(
-        self,
-        key: str,
-        value: Any,
-        description: Optional[str] = None
+        self, key: str, value: Any, description: Optional[str] = None
     ) -> ConfigOperationResponse:
         """Update an existing configuration value.
 
@@ -191,12 +188,9 @@ class ConfigResource:
             Response indicating success/failure of the operation
         """
         return await self.set_config(key, value, description)
-    
+
     async def patch_config(
-        self,
-        key: str,
-        patches: List[Dict[str, Any]],
-        patch_format: str = "merge"
+        self, key: str, patches: List[Dict[str, Any]], patch_format: str = "merge"
     ) -> ConfigOperationResponse:
         """Apply JSON patch operations to a configuration.
 
@@ -219,7 +213,7 @@ class ConfigResource:
                 [{"pool_size": 50, "timeout": 30}],
                 patch_format="merge"
             )
-            
+
             # JSON Patch (complex operations)
             await client.config.patch_config(
                 "features",
@@ -238,16 +232,15 @@ class ConfigResource:
         else:
             headers["Content-Type"] = "application/merge-patch+json"
             payload = patches[0] if len(patches) == 1 else {"patches": patches}
-            
+
         data = await self._transport.request(
-            "PATCH", 
-            f"/v1/config/{key}",
-            json=payload,
-            headers=headers
+            "PATCH", f"/v1/config/{key}", json=payload, headers=headers
         )
         return ConfigOperationResponse(**data)
 
-    async def bulk_set(self, configs: Dict[str, Any]) -> Dict[str, ConfigOperationResponse]:
+    async def bulk_set(
+        self, configs: Dict[str, Any]
+    ) -> Dict[str, ConfigOperationResponse]:
         """Set multiple configuration values at once.
 
         Args:
@@ -267,9 +260,7 @@ class ConfigResource:
             except CIRISAPIError as e:
                 # Create error response for failed operations
                 results[key] = ConfigOperationResponse(
-                    success=False,
-                    message=str(e),
-                    key=key
+                    success=False, message=str(e), key=key
                 )
         return results
 
@@ -290,19 +281,20 @@ class ConfigResource:
 
         # Simple pattern matching (could be enhanced)
         import fnmatch
+
         matching = []
         for config in all_configs:
             if fnmatch.fnmatch(config.key.lower(), pattern.lower()):
                 matching.append(config)
 
         return matching
-    
+
     # Aliases for backward compatibility with tests
     async def get_all(self) -> Dict[str, Any]:
         """Get all configuration as a dictionary. Alias for list_configs."""
         configs = await self.list_configs()
         return {config.key: config.value for config in configs}
-    
+
     async def get(self, key: str) -> Any:
         """Get configuration value by key. Alias for get_config."""
         config = await self.get_config(key)
@@ -322,11 +314,11 @@ class ConfigResource:
                     if field_value is not None:
                         return field_value
         return config.value
-    
+
     async def set(self, key: str, value: Any) -> Any:
         """Set configuration value. Alias for set_config."""
         result = await self.set_config(key, value)
         # Return just the value for backward compatibility
-        if hasattr(result, 'new_value'):
+        if hasattr(result, "new_value"):
             return result.new_value
         return value

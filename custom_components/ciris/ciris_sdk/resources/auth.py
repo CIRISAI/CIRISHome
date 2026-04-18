@@ -10,14 +10,16 @@ Provides clean session management with the 4-role model:
 - AUTHORITY: Strategic decisions and guidance
 - ROOT: Full system access
 """
-from typing import Optional, List
+
 from datetime import datetime
+from typing import List, Optional
 
 from ..transport import Transport
 
 
 class LoginRequest:
     """Request to authenticate with username/password."""
+
     def __init__(self, username: str, password: str):
         self.username = username
         self.password = password
@@ -25,6 +27,7 @@ class LoginRequest:
 
 class LoginResponse:
     """Response after successful login."""
+
     def __init__(self, data: dict):
         self.access_token: str = data["access_token"]
         self.token_type: str = data["token_type"]
@@ -35,21 +38,27 @@ class LoginResponse:
 
 class TokenRefreshRequest:
     """Request to refresh access token."""
+
     def __init__(self, refresh_token: str):
         self.refresh_token = refresh_token
 
 
 class UserInfo:
     """Current user information with permissions."""
+
     def __init__(self, data: dict):
         self.user_id: str = data["user_id"]
         self.username: str = data["username"]
         self.role: str = data["role"]
         self.permissions: List[str] = data["permissions"]
-        self.created_at: datetime = datetime.fromisoformat(data["created_at"].replace("Z", "+00:00"))
+        self.created_at: datetime = datetime.fromisoformat(
+            data["created_at"].replace("Z", "+00:00")
+        )
         self.last_login: Optional[datetime] = None
         if data.get("last_login"):
-            self.last_login = datetime.fromisoformat(data["last_login"].replace("Z", "+00:00"))
+            self.last_login = datetime.fromisoformat(
+                data["last_login"].replace("Z", "+00:00")
+            )
 
 
 class AuthResource:
@@ -83,15 +92,10 @@ class AuthResource:
         Raises:
             HTTPException: If credentials are invalid
         """
-        request_data = {
-            "username": username,
-            "password": password
-        }
+        request_data = {"username": username, "password": password}
 
         response = await self._transport.request(
-            "POST",
-            "/v1/auth/login",
-            json=request_data
+            "POST", "/v1/auth/login", json=request_data
         )
 
         return LoginResponse(response)
@@ -106,10 +110,7 @@ class AuthResource:
         Raises:
             HTTPException: If not authenticated
         """
-        await self._transport.request(
-            "POST",
-            "/v1/auth/logout"
-        )
+        await self._transport.request("POST", "/v1/auth/logout")
 
     async def get_current_user(self) -> UserInfo:
         """
@@ -124,10 +125,7 @@ class AuthResource:
         Raises:
             HTTPException: If not authenticated
         """
-        response = await self._transport.request(
-            "GET",
-            "/v1/auth/me"
-        )
+        response = await self._transport.request("GET", "/v1/auth/me")
 
         return UserInfo(response)
 
@@ -148,14 +146,10 @@ class AuthResource:
         Raises:
             HTTPException: If not authenticated
         """
-        request_data = {
-            "refresh_token": refresh_token or "current_token"
-        }
+        request_data = {"refresh_token": refresh_token or "current_token"}
 
         response = await self._transport.request(
-            "POST",
-            "/v1/auth/refresh",
-            json=request_data
+            "POST", "/v1/auth/refresh", json=request_data
         )
 
         return LoginResponse(response)
