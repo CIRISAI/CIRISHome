@@ -1,0 +1,11 @@
+{
+  "domain": "ciris",
+  "name": "CIRIS AI Assistant",
+  "version": "2.0.0",
+  "documentation": "https://github.com/CIRISAI/CIRISHome",
+  "requirements": ["httpx>=0.24.0"],
+  "dependencies": ["conversation"],
+  "codeowners": ["@CIRISAI"],
+  "config_flow": true,
+  "iot_class": "local_polling"
+}
