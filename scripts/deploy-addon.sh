@@ -115,15 +115,28 @@ for file in Dockerfile build.yaml; do
     fi
 done
 
-# Copy www from Compose Multiplatform web build output
-COMPOSE_WEB_BUILD="${REPO_ROOT}/mobile-web/webApp/build/dist/wasmJs/developmentExecutable"
+# Copy www from Compose Multiplatform web build output (prefer production, fallback to dev)
+COMPOSE_WEB_BUILD="${REPO_ROOT}/mobile-web/webApp/build/dist/wasmJs/productionExecutable"
+if [ ! -d "${COMPOSE_WEB_BUILD}" ]; then
+    COMPOSE_WEB_BUILD="${REPO_ROOT}/mobile-web/webApp/build/dist/wasmJs/developmentExecutable"
+fi
 if [ -d "${COMPOSE_WEB_BUILD}" ]; then
-    log_step "Copying Compose web build (this may take a moment)..."
-    ssh "${HA_USER}@${HA_HOST}" "mkdir -p ${ADDON_PATH}/www"
+    log_step "Copying Compose web build from ${COMPOSE_WEB_BUILD}..."
+    ssh "${HA_USER}@${HA_HOST}" "rm -rf ${ADDON_PATH}/www && mkdir -p ${ADDON_PATH}/www"
     scp -qr "${COMPOSE_WEB_BUILD}/"* "${HA_USER}@${HA_HOST}:${ADDON_PATH}/www/" 2>/dev/null || true
+    log_info "Web build copied ($(ls ${COMPOSE_WEB_BUILD}/*.wasm 2>/dev/null | wc -l) wasm files)"
 else
-    log_warn "Compose web build not found at ${COMPOSE_WEB_BUILD}"
-    log_warn "Run: cd mobile-web && ./gradlew wasmJsBrowserDevelopmentExecutableDistribution"
+    log_warn "Compose web build not found"
+    log_warn "Run: cd mobile-web && ./gradlew :webApp:wasmJsBrowserDistribution"
+fi
+
+# Copy wheel file if present
+WHEEL_FILE=$(ls "${LOCAL_ADDON_DIR}"/*.whl 2>/dev/null | head -1)
+if [ -n "$WHEEL_FILE" ] && [ -f "$WHEEL_FILE" ]; then
+    log_step "Copying wheel: $(basename $WHEEL_FILE)..."
+    scp -q "$WHEEL_FILE" "${HA_USER}@${HA_HOST}:${ADDON_PATH}/"
+else
+    log_warn "No wheel file found in ${LOCAL_ADDON_DIR}"
 fi
 
 # Step 3: Generate config.yaml with correct settings
