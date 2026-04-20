@@ -21,8 +21,8 @@
 ssh root@homeassistant.local
 
 # Create addon directory
-mkdir -p /addons/ciris_agent
-cd /addons/ciris_agent
+mkdir -p /addons/ciris-agent
+cd /addons/ciris-agent
 
 # Download latest release
 curl -L https://github.com/CIRISAI/CIRISHome/releases/latest/download/ciris-agent-addon.tar.gz | tar xz
@@ -31,8 +31,8 @@ curl -L https://github.com/CIRISAI/CIRISHome/releases/latest/download/ciris-agen
 ha addons reload
 
 # Install from local addons
-ha addons install local_ciris_agent
-ha addons start local_ciris_agent
+ha addons install local_ciris-agent
+ha addons start local_ciris-agent
 ```
 
 ## First Run Setup
@@ -84,17 +84,17 @@ All configuration is done through the web UI wizard. No manual YAML editing requ
 
 **View Logs:**
 ```bash
-ha addons logs local_ciris_agent
+ha addons logs local_ciris-agent
 ```
 
 **Restart Addon:**
 ```bash
-ha addons restart local_ciris_agent
+ha addons restart local_ciris-agent
 ```
 
 **Check Status:**
 ```bash
-ha addons info local_ciris_agent
+ha addons info local_ciris-agent
 ```
 
 **Logs Directory:**

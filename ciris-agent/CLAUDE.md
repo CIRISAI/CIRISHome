@@ -147,7 +147,7 @@ export CIRIS_HOME=/data/ciris
 ### Deploy Script Steps
 
 1. SSH to HA host
-2. Create `/addons/ciris_agent` directory
+2. Create `/addons/ciris-agent` directory
 3. Copy Dockerfile, build.yaml, www/
 4. Generate config.yaml with correct settings
 5. Generate run.sh with correct shebang
@@ -171,7 +171,7 @@ The wheel MUST be pure Python (`py3-none-any`). Alpine uses musllinux, so `manyl
 ## Lessons Learned
 
 ### Addon Slug Naming
-- Local addon slug MUST use underscore: `ciris_agent`
+- Local addon slug uses hyphen: `ciris-agent`
 - Directory name doesn't have to match slug
 - Supervisor discovers local addons as `local_<slug>`
 
@@ -226,7 +226,7 @@ ssh root@192.168.50.243 'cat /share/ciris_logs/incidents.log'
 
 ### Check Addon Logs (stdout)
 ```bash
-ssh root@192.168.50.243 'ha addons logs local_ciris_agent'
+ssh root@192.168.50.243 'ha addons logs local_ciris-agent'
 ```
 
 ### Check Supervisor Logs
@@ -255,12 +255,12 @@ NOT `/root/ciris` (forbidden system directory).
 
 ### Verify Addon Discovery
 ```bash
-ssh root@192.168.50.243 'ha addons info local_ciris_agent'
+ssh root@192.168.50.243 'ha addons info local_ciris-agent'
 ```
 
 ### Check Ingress Panel
 ```bash
-ssh root@192.168.50.243 'ha addons info local_ciris_agent | grep ingress'
+ssh root@192.168.50.243 'ha addons info local_ciris-agent | grep ingress'
 ```
 
 Should show `ingress_panel: true`.
