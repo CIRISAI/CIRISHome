@@ -1,6 +1,6 @@
 name: "CIRIS Agent"
-description: "CIRIS AI Agent for Home Assistant - Multi-modal AI home automation"
-version: "6.0.0"
+description: "CIRIS AI Agent for Home Assistant - Multi-modal AI home automation. Licensed under GNU AGPL v3.0."
+version: "6.1.2"
 slug: "ciris_agent"
 url: "https://github.com/CIRISAI/CIRISHome"
 arch:
@@ -11,6 +11,7 @@ init: false
 ingress: true
 ingress_port: 8099
 ingress_stream: true
+ingress_panel: true
 panel_icon: mdi:robot
 panel_title: CIRIS
 homeassistant_api: true
@@ -18,6 +19,10 @@ hassio_api: true
 hassio_role: default
 auth_api: true
 startup: services
+# Map persistent storage and HA config directory
+map:
+  - share:rw
+  - config:rw
 ports:
   8099/tcp: null
 ports_description:
