@@ -201,7 +201,30 @@ The wheel MUST be pure Python (`py3-none-any`). Alpine uses musllinux, so `manyl
 
 ## Troubleshooting
 
-### Check Addon Logs
+### Log File Locations (on HA)
+
+Logs are exposed in `/share/ciris_logs/` for easy access:
+
+| File | Description |
+|------|-------------|
+| `/share/ciris_logs/latest.log` | Main application log (all messages) |
+| `/share/ciris_logs/incidents.log` | Incident/error log |
+| `/share/ciris_logs/startup.log` | Startup sequence log |
+| `/share/ciris_logs/env.txt` | Current environment snapshot |
+
+**Quick log access:**
+```bash
+# View latest log
+ssh root@192.168.50.243 'tail -100 /share/ciris_logs/latest.log'
+
+# Search for errors
+ssh root@192.168.50.243 'grep -i error /share/ciris_logs/latest.log | tail -20'
+
+# View incidents
+ssh root@192.168.50.243 'cat /share/ciris_logs/incidents.log'
+```
+
+### Check Addon Logs (stdout)
 ```bash
 ssh root@192.168.50.243 'ha addons logs local_ciris_agent'
 ```
@@ -260,6 +283,53 @@ The web UI is built with Compose Multiplatform 2.X (Kotlin/WASM) and provides:
 | Anthropic | Claude API direct |
 | Jetson | Local Llama-4-Scout on Jetson Nano |
 | Ollama | Local Ollama instance |
+
+---
+
+## Known Issues
+
+### "Web Sign-In not available" on Phone Browser
+
+**Symptom**: OAuth sign-in button shows error on phone browser but works on desktop.
+
+**Root Cause**: The WASM build cannot do native OAuth (`googleSignInCallback = null`). Desktop works because HA addon mode is detected via ingress URL pattern, which skips OAuth entirely and uses BYOK mode.
+
+**Why Phone Fails**:
+1. Phone may access HA via different URL (Nabu Casa, companion app, reverse proxy)
+2. URL doesn't match `/api/hassio_ingress/` pattern
+3. `detectHAMode()` returns false → Login screen shown
+4. OAuth button fails because WASM has no OAuth callback
+
+**Workarounds**:
+1. Access HA directly via local IP (not Nabu Casa): `http://192.168.x.x:8123/`
+2. Or add `?byok=true` to URL to force BYOK mode (if implemented)
+
+**Upstream Fix**: See `docs/UPSTREAM_FIX_WEB_SIGNIN_FLOW.md`
+
+### Kotlin WASM Production Builds Broken (KT-69154)
+
+**Symptom**: Production WASM builds fail at runtime with:
+```
+WebAssembly.instantiate(): Import #1 'js_code' 'kotlin.wasm.internal.throwJsError':
+function import requires a callable
+```
+
+**Root Cause**: Kotlin bug KT-69154 - JS wrapper gets out of sync with WASM module during production optimization/minification.
+
+**Workaround**: Use development builds ONLY:
+```bash
+# Use this:
+./gradlew :webApp:wasmJsBrowserDevelopmentExecutable
+
+# NOT this (broken):
+./gradlew :webApp:wasmJsBrowserDistribution
+```
+
+**Impact**: Development builds are larger (~11MB gzipped vs ~3MB production), but functional.
+
+**Status**: Track upstream fix at https://youtrack.jetbrains.com/issue/KT-69154
+
+**Deploy Script**: `scripts/deploy-addon.sh` is configured to ONLY use development builds.
 
 ---
 

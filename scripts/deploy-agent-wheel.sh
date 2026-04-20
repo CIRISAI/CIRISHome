@@ -1,11 +1,18 @@
 #!/bin/bash
 # deploy-agent-wheel.sh
 # Builds and deploys CIRISAgent wheel to Home Assistant addon directory
+# Also fetches the correct CIRISVerify musl binary for Alpine Linux
+# Supports KMP 2.x with optional WASM web app build
 #
-# Usage: ./scripts/deploy-agent-wheel.sh [HA_HOST]
+# Usage: ./scripts/deploy-agent-wheel.sh [HA_HOST] [--skip-verify] [--build-web]
+#
+# Options:
+#   --skip-verify  Skip downloading CIRISVerify binary (use existing)
+#   --build-web    Build and deploy WASM web app (requires KMP 2.x upstream)
 #
 # Environment variables:
-#   CIRIS_AGENT_DIR - Path to CIRISAgent directory (default: ../CIRISAgent)
+#   CIRIS_AGENT_DIR    - Path to CIRISAgent directory (default: ../CIRISAgent)
+#   CIRIS_VERIFY_VER   - CIRISVerify version to download (default: auto-detect latest)
 #
 # =============================================================================
 # LESSONS LEARNED:
@@ -32,15 +39,54 @@
 #    - Wheel goes to /addons/ciris_agent/ on HA
 #    - After deploying wheel, run deploy-addon.sh --fresh to rebuild
 #
+# 5. CIRISVERIFY MUSL BINARY:
+#    - HA addons use Alpine Linux (musl libc), NOT glibc
+#    - Must download the musl-specific binary from GitHub releases
+#    - Asset name: ciris-verify-vX.Y.Z-linux-arm64-musl.tar.gz
+#    - The -lunwind flag is required for _Unwind_* symbol resolution
+#
+# 6. KMP 2.x UPSTREAM (2025+):
+#    - CIRISAgent migrated to Kotlin 2.0.21 + Compose 1.7.1
+#    - Native wasmJs target for web deployment
+#    - AGP 8.5.2 (compatible with Chaquopy 17.0.0)
+#    - Build web: ./gradlew :webApp:wasmJsBrowserDistribution
+#    - Web output: mobile/webApp/build/dist/wasmJs/productionExecutable/
+#    - Replaces separate CIRISHome/mobile-web conversion process
+#
 # =============================================================================
 
 set -e
 
-# Configuration
-HA_HOST="${1:-192.168.50.243}"
+# Configuration defaults
+HA_HOST="192.168.50.243"
 HA_USER="root"
 CIRIS_AGENT_DIR="${CIRIS_AGENT_DIR:-../CIRISAgent}"
 ADDON_PATH="/addons/ciris_agent"
+CIRIS_VERIFY_REPO="CIRISAI/CIRISVerify"
+CIRIS_HOME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Parse arguments
+SKIP_VERIFY=false
+BUILD_WEB=false
+for arg in "$@"; do
+    case $arg in
+        --skip-verify)
+            SKIP_VERIFY=true
+            ;;
+        --build-web)
+            BUILD_WEB=true
+            ;;
+        192.168.*|10.*|172.*)
+            HA_HOST="$arg"
+            ;;
+        *)
+            # Check if it looks like a hostname
+            if [[ "$arg" =~ ^[a-zA-Z] ]] && [[ ! "$arg" =~ ^-- ]]; then
+                HA_HOST="$arg"
+            fi
+            ;;
+    esac
+done
 
 # Colors for output
 RED='\033[0;31m'
@@ -81,6 +127,101 @@ log_step "Checking SSH connectivity to $HA_HOST..."
 if ! ssh -o ConnectTimeout=5 "${HA_USER}@${HA_HOST}" "echo 'SSH OK'" &>/dev/null; then
     log_error "Cannot connect to ${HA_USER}@${HA_HOST}"
     exit 1
+fi
+
+# =============================================================================
+# CIRISVerify musl binary download
+# =============================================================================
+download_cirisverify_musl() {
+    local lib_dir="${CIRIS_HOME_DIR}/ciris-agent/lib"
+    local target_file="${lib_dir}/libciris_verify.so"
+
+    # Get latest version if not specified
+    local version="${CIRIS_VERIFY_VER:-}"
+    if [ -z "$version" ]; then
+        log_step "Fetching latest CIRISVerify version..."
+        version=$(gh release view --repo "$CIRIS_VERIFY_REPO" --json tagName -q '.tagName' 2>/dev/null || echo "")
+        if [ -z "$version" ]; then
+            log_error "Cannot fetch CIRISVerify version. Is 'gh' CLI installed and authenticated?"
+            return 1
+        fi
+    fi
+    log_info "CIRISVerify version: $version"
+
+    # Determine architecture (HA Yellow is aarch64, also support x86_64)
+    local arch
+    arch=$(ssh "${HA_USER}@${HA_HOST}" "uname -m" 2>/dev/null || echo "aarch64")
+    local asset_name
+    case "$arch" in
+        aarch64|arm64)
+            asset_name="ciris-verify-${version}-linux-arm64-musl.tar.gz"
+            ;;
+        x86_64)
+            # Note: x86_64 musl may not be available; fall back to glibc if needed
+            asset_name="ciris-verify-${version}-linux-arm64-musl.tar.gz"
+            log_warn "x86_64 musl binary may not be available; using arm64-musl"
+            ;;
+        *)
+            log_error "Unsupported architecture: $arch"
+            return 1
+            ;;
+    esac
+
+    log_step "Downloading CIRISVerify musl binary: $asset_name"
+
+    # Create temp directory for download
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
+    trap "rm -rf $tmp_dir" RETURN
+
+    # Download using gh CLI
+    if ! gh release download "$version" \
+        --repo "$CIRIS_VERIFY_REPO" \
+        --pattern "$asset_name" \
+        --dir "$tmp_dir" 2>/dev/null; then
+        log_error "Failed to download $asset_name from $CIRIS_VERIFY_REPO"
+        return 1
+    fi
+
+    # Extract the tarball
+    log_info "Extracting binary..."
+    mkdir -p "$lib_dir"
+    tar -xzf "${tmp_dir}/${asset_name}" -C "$tmp_dir"
+
+    # Find and copy the .so file
+    local so_file
+    so_file=$(find "$tmp_dir" -name "libciris_verify*.so" -o -name "libciris_verify_ffi.so" | head -1)
+    if [ -z "$so_file" ]; then
+        log_error "No .so file found in tarball"
+        return 1
+    fi
+
+    cp "$so_file" "$target_file"
+    chmod 755 "$target_file"
+
+    local size
+    size=$(du -h "$target_file" | cut -f1)
+    log_info "CIRISVerify musl binary installed: $target_file ($size)"
+
+    return 0
+}
+
+# Download CIRISVerify musl binary unless skipped
+if [ "$SKIP_VERIFY" = false ]; then
+    log_step "Fetching CIRISVerify musl binary for Alpine Linux..."
+    if command -v gh &>/dev/null; then
+        if download_cirisverify_musl; then
+            log_info "CIRISVerify musl binary ready"
+        else
+            log_warn "Failed to download CIRISVerify. Using existing binary if available."
+        fi
+    else
+        log_warn "GitHub CLI (gh) not found. Skipping CIRISVerify download."
+        log_info "Install with: brew install gh  OR  apt install gh"
+        log_info "Or use --skip-verify to use existing binary"
+    fi
+else
+    log_info "Skipping CIRISVerify download (--skip-verify)"
 fi
 
 # List of platform-specific files that would create manylinux wheel
@@ -170,6 +311,94 @@ echo "  Location: ${HA_HOST}:${ADDON_PATH}/$(basename $WHEEL_FILE)"
 echo "  Version:  $WHEEL_VERSION"
 echo "  Size:     $WHEEL_SIZE"
 echo ""
+
+# =============================================================================
+# WASM Web App Build (KMP 2.x)
+# =============================================================================
+if [ "$BUILD_WEB" = true ]; then
+    log_step "Building WASM web app from KMP 2.x upstream..."
+
+    MOBILE_DIR="${CIRIS_AGENT_DIR}/mobile"
+    WEBAPP_DIR="${MOBILE_DIR}/webApp"
+    WASM_OUTPUT="${WEBAPP_DIR}/build/dist/wasmJs/productionExecutable"
+
+    # Check if webApp module exists
+    if [ ! -d "$WEBAPP_DIR" ]; then
+        log_warn "webApp module not found at $WEBAPP_DIR"
+        log_info "Run migration first: cd ${MOBILE_DIR} && ./scripts/migrate-to-kmp2.sh"
+        log_info "Skipping web build..."
+    else
+        cd "$MOBILE_DIR"
+
+        # Build production WASM
+        log_info "Building wasmJsBrowserDistribution (this may take a few minutes)..."
+        if ./gradlew :webApp:wasmJsBrowserDistribution --quiet 2>&1; then
+            log_ok "WASM build complete"
+
+            # Check output
+            if [ -d "$WASM_OUTPUT" ]; then
+                WASM_SIZE=$(du -sh "$WASM_OUTPUT" | cut -f1)
+                log_info "WASM output: $WASM_OUTPUT ($WASM_SIZE)"
+
+                # Deploy to HA addon www directory
+                log_step "Deploying WASM app to HA..."
+                WWW_PATH="${ADDON_PATH}/www"
+
+                ssh "${HA_USER}@${HA_HOST}" "rm -rf ${WWW_PATH} && mkdir -p ${WWW_PATH}"
+                scp -rq "${WASM_OUTPUT}/"* "${HA_USER}@${HA_HOST}:${WWW_PATH}/"
+
+                log_ok "WASM app deployed to ${HA_HOST}:${WWW_PATH}/"
+            else
+                log_warn "WASM output directory not found: $WASM_OUTPUT"
+            fi
+        else
+            log_error "WASM build failed"
+            log_info "Check build errors with: cd ${MOBILE_DIR} && ./gradlew :webApp:wasmJsBrowserDistribution"
+        fi
+
+        cd "$CIRIS_AGENT_DIR"
+    fi
+fi
+
+# =============================================================================
+# Sync CIRISHome mobile-web from upstream (if needed)
+# =============================================================================
+sync_mobile_web() {
+    local src_mobile="${CIRIS_AGENT_DIR}/mobile"
+    local dst_mobile="${CIRIS_HOME_DIR}/mobile-web"
+
+    log_step "Syncing mobile-web from KMP 2.x upstream..."
+
+    # Check if upstream has wasmJs target
+    if grep -q "wasmJs" "${src_mobile}/shared/build.gradle.kts" 2>/dev/null; then
+        log_info "Upstream has native wasmJs - syncing commonMain only"
+
+        # Sync only commonMain (preserve wasmJsMain implementations)
+        rsync -av --delete \
+            --exclude='build/' \
+            --exclude='.gradle/' \
+            "${src_mobile}/shared/src/commonMain/" \
+            "${dst_mobile}/shared/src/commonMain/" > /dev/null 2>&1 || true
+
+        log_ok "commonMain synced"
+    else
+        log_info "Upstream doesn't have wasmJs yet - using full rebuild"
+        log_info "Run: ./scripts/rebuild-mobile-web.sh to convert"
+    fi
+}
+
+# Check if mobile-web sync is needed
+if [ -d "${CIRIS_HOME_DIR}/mobile-web" ]; then
+    # Check if upstream is newer than local
+    UPSTREAM_MOD=$(stat -c %Y "${CIRIS_AGENT_DIR}/mobile/shared/src/commonMain" 2>/dev/null || echo "0")
+    LOCAL_MOD=$(stat -c %Y "${CIRIS_HOME_DIR}/mobile-web/shared/src/commonMain" 2>/dev/null || echo "0")
+
+    if [ "$UPSTREAM_MOD" -gt "$LOCAL_MOD" ]; then
+        log_info "Upstream mobile code is newer - consider syncing"
+        log_info "Run: ./scripts/rebuild-mobile-web.sh"
+    fi
+fi
+
 log_info "Next steps:"
 echo "  1. Deploy addon:  ./scripts/deploy-addon.sh $HA_HOST --fresh"
 echo "  2. Or rebuild:    ssh ${HA_USER}@${HA_HOST} 'ha addons rebuild local_ciris_agent'"

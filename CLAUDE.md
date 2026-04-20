@@ -569,6 +569,31 @@ OPENAI_MODEL_NAME=llama-4-scout-int4   # Quantized model
 
 ---
 
+## Home Assistant Addon Debugging
+
+**IMPORTANT**: When debugging the HA addon, always check **log files** not `ha addons logs`:
+
+```bash
+# CIRIS log files (persisted to /share for access)
+ssh root@192.168.50.243 "cat /share/ciris_logs/latest.log | tail -100"
+ssh root@192.168.50.243 "cat /share/ciris_logs/startup.log"
+ssh root@192.168.50.243 "cat /share/ciris_logs/incidents.log"
+
+# Search for specific issues
+ssh root@192.168.50.243 "grep -E 'ERROR|WARN|CIRIS_USER_CREATE' /share/ciris_logs/latest.log"
+
+# Addon container logs (less useful, truncated)
+ssh root@192.168.50.243 "ha addons logs local_ciris_agent | tail -50"
+```
+
+**Why log files over `ha addons logs`**:
+- `ha addons logs` is truncated and misses startup details
+- Log files persist across restarts for debugging
+- Log files include full stack traces and DEBUG level output
+- Setup/auth issues are in log files, not container stdout
+
+---
+
 ## Quality Standards
 
 - **Mission Alignment**: Every feature serves family wellbeing

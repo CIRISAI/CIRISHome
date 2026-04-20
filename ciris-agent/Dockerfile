@@ -11,12 +11,20 @@
 ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
+# Cache-busting: this ARG changes every deploy to force rebuild
+# The ARG must be referenced in the RUN to invalidate cache
+ARG BUILD_TIMESTAMP=0
+
 # Install system dependencies
+# The CIRISVerify binary is built with -lunwind which statically links unwinding support
+# Runtime deps: python3, pip for agent, curl for health checks, emoji fonts for UI
 # hadolint ignore=DL3018
-RUN apk add --no-cache \
+RUN echo "Build timestamp: ${BUILD_TIMESTAMP}" && \
+    apk add --no-cache \
     python3 \
     py3-pip \
     curl \
+    font-noto-emoji \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /app
@@ -24,10 +32,17 @@ WORKDIR /app
 # Copy and install CIRIS Agent wheel
 # NOTE: The wheel MUST be py3-none-any (pure Python)
 # Alpine uses musllinux, so manylinux wheels will NOT work
+# Reference BUILD_TIMESTAMP to bust Docker cache when wheel content changes
 COPY ciris_agent-*.whl /tmp/
 # hadolint ignore=DL3013
-RUN pip3 install --no-cache-dir --break-system-packages /tmp/ciris_agent-*.whl && \
+RUN echo "Wheel build: ${BUILD_TIMESTAMP}" && \
+    pip3 install --no-cache-dir --break-system-packages --force-reinstall /tmp/ciris_agent-*.whl && \
     rm /tmp/ciris_agent-*.whl
+
+# Copy CIRISVerify binary (aarch64-linux-musl for Alpine/HA)
+# NOTE: Must be built with: cargo zigbuild --target aarch64-unknown-linux-musl
+# The glibc build will fail with "symbol not found" errors on Alpine
+COPY lib/libciris_verify.so /usr/lib/ciris/libciris_verify.so
 
 # Copy web assets to gui_static where the agent expects them
 # The agent looks for gui_static in the ciris_engine package directory

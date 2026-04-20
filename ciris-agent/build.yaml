@@ -9,6 +9,10 @@ build_from:
   aarch64: ghcr.io/home-assistant/aarch64-base:3.19
   amd64: ghcr.io/home-assistant/amd64-base:3.19
 
+# Build args - BUILD_TIMESTAMP is set by deploy script to bust cache
+args:
+  BUILD_TIMESTAMP: "0"
+
 labels:
   org.opencontainers.image.title: "CIRIS Agent"
   org.opencontainers.image.description: "CIRIS AI Agent for Home Assistant"
