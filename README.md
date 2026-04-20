@@ -1,11 +1,11 @@
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-DEPLOYMENT%20READY-brightgreen.svg)](#current-status)
 [![Platform](https://img.shields.io/badge/Platform-Home%20Assistant%20+%20Jetson%20Orin-blue.svg)](#hardware-stack)
 [![Tests](https://img.shields.io/badge/Tests-63%20passing-brightgreen.svg)](#testing-status)
 
 # CIRIS Home
 
-**Copyright © 2025 Eric Moore and CIRIS L3C** | **Apache 2.0 License**
+**Copyright © 2025 Eric Moore and CIRIS L3C** | **GNU AGPL v3.0 License**
 
 **Multi-modal HOME automation platform with local AI processing**
 
@@ -236,7 +236,9 @@ pre-commit run --all-files         # Code quality checks
 
 ## License
 
-Apache 2.0 License - see [LICENSE](LICENSE) file for details.
+GNU Affero General Public License v3.0 - see [LICENSE](LICENSE) file for details.
+
+This ensures that any modifications to CIRIS, including those deployed as network services, must be shared with the community under the same terms.
 
 ---
 
