@@ -168,6 +168,14 @@ if [ -d "${LOCAL_ADDON_DIR}/lib" ]; then
     log_info "CIRISVerify binary copied"
 fi
 
+# Copy CIRIS conversation agent custom component (eliminates need for HACS)
+if [ -d "${LOCAL_ADDON_DIR}/custom_components/ciris" ]; then
+    log_step "Copying CIRIS conversation agent..."
+    $SSH_CMD "mkdir -p ${ADDON_PATH}/custom_components"
+    $SCP_CMD -r "${LOCAL_ADDON_DIR}/custom_components/ciris" "${HA_USER}@${HA_HOST}:${ADDON_PATH}/custom_components/"
+    log_info "CIRIS conversation agent copied (will be installed to HA on addon start)"
+fi
+
 # Copy www from Compose Multiplatform web build output
 # Priority: 1) upstream CIRISAgent KMP 2.x, 2) local mobile-web conversion
 #
@@ -271,6 +279,7 @@ auth_api: true
 startup: services
 map:
   - share:rw
+  - config:rw
 ports:
   8099/tcp: null
 ports_description:
@@ -309,6 +318,32 @@ mkdir -p /share/ciris_logs
     cp \"\$CIRIS_HOME/.env\" /share/ciris_logs/env.txt 2>/dev/null || true
     sleep 5
 done) &
+
+# Install CIRIS conversation agent custom component (eliminates need for HACS)
+# This copies the bundled custom_components/ciris to HA's config directory
+echo \"[CIRIS STARTUP] Installing CIRIS conversation agent...\" >> /share/ciris_logs/startup.log
+if [ -d /app/custom_components/ciris ]; then
+    mkdir -p /config/custom_components
+    # Get versions for comparison
+    BUNDLED_VERSION=\$(grep -o '\"version\": *\"[^\"]*\"' /app/custom_components/ciris/manifest.json | cut -d'\"' -f4)
+    INSTALLED_VERSION=\"\"
+    if [ -f /config/custom_components/ciris/manifest.json ]; then
+        INSTALLED_VERSION=\$(grep -o '\"version\": *\"[^\"]*\"' /config/custom_components/ciris/manifest.json | cut -d'\"' -f4)
+    fi
+    echo \"[CIRIS STARTUP] Bundled version: \$BUNDLED_VERSION, Installed version: \$INSTALLED_VERSION\" >> /share/ciris_logs/startup.log
+    # Always update if versions differ or not installed
+    if [ \"\$BUNDLED_VERSION\" != \"\$INSTALLED_VERSION\" ]; then
+        rm -rf /config/custom_components/ciris
+        cp -r /app/custom_components/ciris /config/custom_components/
+        echo \"[CIRIS STARTUP] CIRIS conversation agent v\$BUNDLED_VERSION installed to /config/custom_components/ciris\" >> /share/ciris_logs/startup.log
+        echo \"[CIRIS STARTUP] ACTION REQUIRED: Restart Home Assistant to load the CIRIS integration\" >> /share/ciris_logs/startup.log
+        echo \"[CIRIS STARTUP] Then go to Settings > Devices & Services > Add Integration > CIRIS\" >> /share/ciris_logs/startup.log
+    else
+        echo \"[CIRIS STARTUP] CIRIS conversation agent v\$INSTALLED_VERSION already up to date\" >> /share/ciris_logs/startup.log
+    fi
+else
+    echo \"[CIRIS STARTUP] WARNING: custom_components/ciris not found in addon\" >> /share/ciris_logs/startup.log
+fi
 
 # Enable sidebar panel via Supervisor API
 # This ensures CIRIS appears in the HA sidebar automatically

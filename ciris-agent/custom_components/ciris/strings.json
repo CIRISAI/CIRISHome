@@ -1,0 +1,73 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to CIRIS",
+        "description": "Set up CIRIS AI Assistant connection. You can add context profiles (rooms, languages) after setup.",
+        "data": {
+          "name": "Name",
+          "api_url": "CIRIS API URL",
+          "api_key": "API Key (optional)",
+          "timeout": "Timeout (seconds)",
+          "channel": "Channel ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to CIRIS API",
+      "invalid_auth": "Invalid authentication credentials",
+      "timeout": "Connection timeout",
+      "unknown": "Unexpected error",
+      "required": "This field is required"
+    },
+    "abort": {
+      "already_configured": "CIRIS is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "CIRIS Options",
+        "description": "Adjust CIRIS connection settings",
+        "data": {
+          "timeout": "Timeout (seconds)",
+          "channel": "Channel ID"
+        }
+      }
+    }
+  },
+  "subentries": {
+    "context_profile": {
+      "initiate_flow": {
+        "user": "Add context profile"
+      },
+      "entry_type": "Context Profile",
+      "step": {
+        "user": {
+          "title": "Create Context Profile",
+          "description": "Configure a context profile for a specific room, user group, or language. Each profile creates a separate conversation agent.",
+          "data": {
+            "profile_name": "Profile Name (e.g., 'Kids Room', 'Office')",
+            "preset": "Quick Start Preset",
+            "room_type": "Room Type",
+            "language": "Language",
+            "safety_level": "Content Safety Level",
+            "response_style": "Response Style",
+            "wake_word": "Wake Word (optional)",
+            "custom_instructions": "Custom Instructions"
+          },
+          "data_description": {
+            "profile_name": "A unique name for this context profile",
+            "preset": "Choose a preset to auto-fill settings, or configure manually",
+            "room_type": "The type of space this profile is for",
+            "language": "Primary language for responses",
+            "safety_level": "Content filtering level",
+            "response_style": "How the AI should respond",
+            "wake_word": "Optional custom wake word for this profile",
+            "custom_instructions": "Additional instructions for the AI in this context"
+          }
+        }
+      }
+    }
+  }
+}

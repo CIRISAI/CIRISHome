@@ -53,6 +53,11 @@ RUN CIRIS_PKG=$(python3 -c "import ciris_engine; print(ciris_engine.__path__[0])
     rm -rf /tmp/www && \
     echo "GUI static assets installed to: $CIRIS_PKG/gui_static"
 
+# Copy CIRIS conversation agent custom component
+# This will be installed to /config/custom_components/ciris/ on startup
+# Eliminates need for HACS installation
+COPY custom_components/ /app/custom_components/
+
 # Environment
 ENV PYTHONUNBUFFERED=1
 
