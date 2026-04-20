@@ -12,7 +12,7 @@
 # =============================================================================
 #
 # 1. ADDON SLUG NAMING:
-#    - Local addon slug uses hyphen (ciris-agent) per HA conventions
+#    - Local addon slug uses underscore (ciris_agent) for HA compatibility
 #    - Directory name doesn't have to match slug
 #    - Supervisor discovers local addons as "local_<slug>"
 #
@@ -81,7 +81,7 @@ set -e
 # Configuration
 HA_HOST="${1:-192.168.50.243}"
 HA_USER="root"
-ADDON_PATH="/addons/ciris-agent"
+ADDON_PATH="/addons/ciris_agent"
 
 # SSH ControlMaster - reuses single connection (saves ~0.3s per SSH call)
 SSH_CONTROL_PATH="/tmp/ssh-ciris-%r@%h:%p"
@@ -94,7 +94,7 @@ cleanup_ssh() {
     ssh -O exit -o ControlPath="${SSH_CONTROL_PATH}" "${HA_USER}@${HA_HOST}" 2>/dev/null || true
 }
 trap cleanup_ssh EXIT
-ADDON_SLUG="local_ciris-agent"
+ADDON_SLUG="local_ciris_agent"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 LOCAL_ADDON_DIR="${REPO_ROOT}/ciris-agent"
@@ -260,7 +260,7 @@ $SSH_CMD "cat > ${ADDON_PATH}/config.yaml << 'CONFIGEOF'
 name: \"CIRIS Agent\"
 description: \"CIRIS AI Agent for Home Assistant - Multi-modal AI home automation\"
 version: \"${VERSION}\"
-slug: \"ciris-agent\"
+slug: \"ciris_agent\"
 url: \"https://github.com/CIRISAI/CIRISHome\"
 arch:
   - aarch64

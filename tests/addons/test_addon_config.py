@@ -14,8 +14,8 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 ADDON_DIR = REPO_ROOT / "ciris-agent"
 CONFIG_FILE = ADDON_DIR / "config.yaml"
 
-# CRITICAL: This must never change
-REQUIRED_SLUG = "ciris-agent"
+# CRITICAL: This must never change - underscore for HA local addon compatibility
+REQUIRED_SLUG = "ciris_agent"
 
 
 @pytest.fixture
@@ -33,8 +33,10 @@ class TestAddonConfig:
         assert CONFIG_FILE.exists(), f"Config file not found: {CONFIG_FILE}"
 
     def test_slug_is_correct(self, config):
-        """Slug must be 'ciris-agent' - NEVER CHANGE THIS.
+        """Slug must be 'ciris_agent' (underscore) - NEVER CHANGE THIS.
 
+        HA Supervisor converts directory hyphens to underscores for local addons.
+        Using underscore in config.yaml ensures consistent slug naming.
         Changing the slug breaks upgrades for all users.
         """
         assert config["slug"] == REQUIRED_SLUG, (
