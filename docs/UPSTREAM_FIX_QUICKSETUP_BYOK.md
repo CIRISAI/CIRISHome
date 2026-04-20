@@ -6,6 +6,7 @@
 ## Problem
 
 In HA addon mode (and any non-OAuth mode), the QuickSetup screen incorrectly shows:
+
 - Green "CIRIS AI Services Active" banner instead of blue "Bring Your Own Key"
 - "Google sign-in is required" validation error
 - Disabled "Next" button
@@ -15,13 +16,16 @@ In HA addon mode (and any non-OAuth mode), the QuickSetup screen incorrectly sho
 **Inconsistent BYOK mode detection between WelcomeStep and QuickSetupStep.**
 
 ### WelcomeStep (correct):
+
 ```kotlin
 val isCirisMode = state.setupMode == SetupMode.CIRIS_PROXY
 // Uses !isCirisMode to determine BYOK mode - anything NOT CIRIS_PROXY = BYOK
 ```
 
 ### QuickSetupStep (was broken):
+
 The code had BYOK mode checks scattered across multiple locations using different variables:
+
 - Header badge
 - Mode info card
 - LLM config section
@@ -48,6 +52,7 @@ val effectiveBYOKMode = isBYOKMode
 Search for all usages of `isBYOKMode` in QuickSetupStep and replace with `effectiveBYOKMode`:
 
 **Header badge (~line 2617-2630):**
+
 ```kotlin
 Surface(
     shape = RoundedCornerShape(20.dp),
@@ -66,6 +71,7 @@ Surface(
 ```
 
 **Mode info card (~line 2650-2685):**
+
 ```kotlin
 Surface(
     color = if (effectiveBYOKMode) SetupColors.InfoLight else SetupColors.SuccessLight,
@@ -88,6 +94,7 @@ Surface(
 ```
 
 **LLM config section (~line 2860-2880):**
+
 ```kotlin
 SetupCollapsibleSection(
     subtitle = when {
@@ -113,6 +120,7 @@ SetupCollapsibleSection(
 The badge text uses emoji prefix `"🔑 "` which may not render in all environments.
 
 **Fix option 1**: Remove emoji, use icon instead
+
 ```kotlin
 // Instead of: "🔑 " + localizedString("mobile.setup_byok_badge")
 // Use just: localizedString("mobile.setup_byok_badge")
@@ -121,6 +129,7 @@ The badge text uses emoji prefix `"🔑 "` which may not render in all environme
 
 **Fix option 2**: Use emoji font
 Ensure emoji fonts are available. In Docker/Alpine:
+
 ```dockerfile
 RUN apk add --no-cache font-noto-emoji
 ```
@@ -128,6 +137,7 @@ RUN apk add --no-cache font-noto-emoji
 ## Validation Logic
 
 The validation in `SetupState.kt` is already correct - it uses:
+
 ```kotlin
 SetupStep.QUICK_SETUP -> {
     when {

@@ -17,7 +17,8 @@ REPO_ROOT = Path(__file__).parent.parent
 CONFIG_FILE = REPO_ROOT / "ciris-agent" / "config.yaml"
 
 # CRITICAL: This slug must NEVER change
-REQUIRED_SLUG = "ciris-agent"
+# Uses underscore for HA Supervisor compatibility (converts hyphens to underscores)
+REQUIRED_SLUG = "ciris_agent"
 
 REQUIRED_FIELDS = [
     "name",

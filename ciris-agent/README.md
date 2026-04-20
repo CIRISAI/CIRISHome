@@ -69,8 +69,8 @@ Now you can use CIRIS with Voice PE pucks, the HA mobile app, or any HA voice in
 
 ## Configuration
 
-| Option | Description |
-|--------|-------------|
+| Option          | Description                           |
+| --------------- | ------------------------------------- |
 | `ingress_panel` | Show CIRIS in sidebar (default: true) |
 
 All configuration is done through the web UI wizard. No manual YAML editing required.
@@ -83,22 +83,26 @@ All configuration is done through the web UI wizard. No manual YAML editing requ
 ## Troubleshooting
 
 **View Logs:**
+
 ```bash
 ha addons logs local_ciris_agent
 ```
 
 **Restart Addon:**
+
 ```bash
 ha addons restart local_ciris_agent
 ```
 
 **Check Status:**
+
 ```bash
 ha addons info local_ciris_agent
 ```
 
 **Logs Directory:**
 Addon logs are copied to `/share/ciris_logs/` for easy access:
+
 - `latest.log` - Main application log
 - `startup.log` - Startup sequence
 - `env.txt` - Current environment (API keys redacted)

@@ -7,6 +7,7 @@
 ## Problem Summary
 
 When accessing CIRIS addon from phone's HA companion app:
+
 - Setup completed successfully from desktop browser
 - Phone's HA app shows "Web Sign-In not available" error
 - Backend logs show authentication IS working: `[HA_INGRESS_AUTH] Authenticated user: Eric Moore`
@@ -37,6 +38,7 @@ The non-first-run code path has **NO check for HA addon mode**:
 ```
 
 **Why phone fails:**
+
 1. Desktop completed setup → stored token in desktop's localStorage
 2. Phone's HA app webview = **different localStorage** (no stored token)
 3. `secureStorage.getAccessToken()` returns null
@@ -44,6 +46,7 @@ The non-first-run code path has **NO check for HA addon mode**:
 5. OAuth button doesn't work because `googleSignInCallback == null` for WASM
 
 **But backend IS authenticating!** Every request shows:
+
 ```
 [HA_INGRESS_AUTH] Authenticated user: Eric Moore... (id: 4dfc6a84...)
 ```
@@ -55,6 +58,7 @@ The ingress token in HTTP headers works perfectly - the frontend just doesn't us
 ### The WASM Build Has No Native OAuth
 
 In `webApp/src/wasmJsMain/kotlin/ai/ciris/web/Main.kt:79`:
+
 ```kotlin
 CIRISApp(
     accessToken = accessToken ?: "",
@@ -68,6 +72,7 @@ CIRISApp(
 ### The Login Screen OAuth Button Check
 
 In `shared/src/commonMain/kotlin/ai/ciris/mobile/shared/CIRISApp.kt:1022-1167`:
+
 ```kotlin
 onGoogleSignIn = {
     if (googleSignInCallback != null) {
@@ -84,6 +89,7 @@ onGoogleSignIn = {
 ### Why Desktop Works But Phone Doesn't
 
 **Desktop browser (works):**
+
 1. Access HA via `http://homeassistant.local:8123/`
 2. Click CIRIS in sidebar
 3. HA loads addon via ingress: `/api/hassio_ingress/TOKEN/`
@@ -95,7 +101,9 @@ onGoogleSignIn = {
 Several scenarios could cause failure:
 
 #### Scenario A: Different URL Pattern on Phone
+
 If the phone accesses HA differently (e.g., Nabu Casa cloud URL, companion app webview, or a reverse proxy), the path might NOT contain:
+
 - `/api/hassio_ingress/`
 - `/hassio/ingress/`
 
@@ -110,10 +118,13 @@ private fun detectHAMode(): Boolean {
 ```
 
 #### Scenario B: Iframe Detection Fails
+
 If the phone browser's webview handles iframes differently, `window.parent != window` might return `false` even when embedded.
 
 #### Scenario C: Not First Run
+
 If `isFirstRun == false` (user already exists), the code path at line 742-744 tries to authenticate:
+
 ```kotlin
 } else {
     // Not first run - try to load stored token
@@ -121,21 +132,27 @@ If `isFirstRun == false` (user already exists), the code path at line 742-744 tr
     ...
 }
 ```
+
 If token validation fails, user ends up on Login screen where OAuth doesn't work.
 
 #### Scenario D: localStorage Inconsistency
+
 The `ciris_ha_addon_mode` flag is stored in localStorage:
+
 ```kotlin
 if (isHAAddon) {
     localStorage.setItem("ciris_ha_addon_mode", "true")
 }
 ```
+
 But subsequent checks use `isHAAddonMode()` from Platform.wasmJs.kt:
+
 ```kotlin
 actual fun isHAAddonMode(): Boolean {
     return localStorage.getItem("ciris_ha_addon_mode") == "true"
 }
 ```
+
 If localStorage is cleared or the URL detection fails on phone, this flag won't be set.
 
 ## Flow Diagram
@@ -180,23 +197,27 @@ If localStorage is cleared or the URL detection fails on phone, this flag won't 
 Add these console logs to diagnose the issue:
 
 1. **Check detection values** - Look in browser console for:
+
    ```
    [CIRIS-Web] isHAAddon=true/false
    [CIRIS-Web] pathname=/api/hassio_ingress/TOKEN/
    ```
 
 2. **Check CIRISApp startup** - Look for:
+
    ```
    [CIRISApp] [INFO] First run in HA Addon mode, skipping login
    ```
+
    vs
+
    ```
    [CIRISApp] [INFO] First run detected, navigating to Login
    ```
 
 3. **Verify localStorage** - In browser DevTools:
    ```javascript
-   localStorage.getItem("ciris_ha_addon_mode")  // Should be "true"
+   localStorage.getItem("ciris_ha_addon_mode"); // Should be "true"
    ```
 
 ## THE FIX (Required)
@@ -221,6 +242,7 @@ Add these console logs to diagnose the issue:
 ```
 
 **Why this works:**
+
 1. HA ingress injects `Ingress-Token` header on all requests
 2. Backend extracts user from this header (already working - see logs)
 3. No client-side token storage needed in HA mode
@@ -350,11 +372,13 @@ CIRISApp(
 ## Summary
 
 The root cause is that:
+
 1. **WASM cannot do native OAuth** (`googleSignInCallback = null`)
 2. **HA addon mode detection may fail on phone** (different URL patterns)
 3. **When both conditions hit**, user sees Login screen with non-functional OAuth button
 
 The recommended fix is either:
+
 - **Quick**: Improve `detectHAMode()` URL pattern matching
 - **Better**: Show BYOK option when OAuth unavailable
 - **Simplest**: Force BYOK mode for all WASM builds (web is primarily for HA addon)

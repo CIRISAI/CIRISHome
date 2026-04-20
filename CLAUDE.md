@@ -587,6 +587,7 @@ ssh root@192.168.50.243 "ha addons logs local_ciris_agent | tail -50"
 ```
 
 **Why log files over `ha addons logs`**:
+
 - `ha addons logs` is truncated and misses startup details
 - Log files persist across restarts for debugging
 - Log files include full stack traces and DEBUG level output

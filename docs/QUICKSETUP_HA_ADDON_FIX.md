@@ -3,6 +3,7 @@
 ## Problem Summary
 
 The QuickSetup screen in Home Assistant addon mode incorrectly showed:
+
 - Green "CIRIS AI Services Active" banner (should be blue "Bring Your Own Key")
 - "Google sign-in is required" error message
 - Disabled "Next" button
@@ -14,6 +15,7 @@ The QuickSetup screen in Home Assistant addon mode incorrectly showed:
 ### The Two Key Screens
 
 1. **WelcomeStep** (works correctly):
+
    ```kotlin
    val isCirisMode = state.setupMode == SetupMode.CIRIS_PROXY
    // Blue banner shown when !isCirisMode (anything NOT CIRIS_PROXY = BYOK)
@@ -28,6 +30,7 @@ The QuickSetup screen in Home Assistant addon mode incorrectly showed:
 ### Why It Failed
 
 In HA addon mode:
+
 1. `setHAAddonMode(true)` is called, which sets `setupMode = SetupMode.BYOK`
 2. BUT multiple places in the QuickSetupStep code checked `isBYOKMode` using different logic
 3. Some places used `state.setupMode == SetupMode.CIRIS_PROXY` to determine CIRIS mode
@@ -36,6 +39,7 @@ In HA addon mode:
 ### The Multi-Location Bug
 
 The QuickSetupStep had BYOK mode checks in multiple locations:
+
 - **Header badge** (~line 2617): Controls badge color/text
 - **Mode info card** (~line 2660-2675): Shows "CIRIS AI Services Active" vs "Bring Your Own Key"
 - **LLM config section** (~line 2862-2877): Shows required vs optional
@@ -45,6 +49,7 @@ Not all locations were using the same `isBYOKMode` variable!
 ## Fix Applied
 
 1. **Unified logic at top of QuickSetupStep**:
+
    ```kotlin
    val isCirisMode = state.setupMode == SetupMode.CIRIS_PROXY
    val isBYOKMode = !isCirisMode
@@ -109,6 +114,7 @@ cd /home/emoore/CIRISHome
 ### 1. WASM Build Caching
 
 Gradle caches aggressively. Always use `--rerun-tasks --no-build-cache` when debugging:
+
 ```bash
 ./gradlew :webApp:wasmJsBrowserDistribution --rerun-tasks --no-build-cache
 ```
@@ -116,6 +122,7 @@ Gradle caches aggressively. Always use `--rerun-tasks --no-build-cache` when deb
 ### 2. Verify Build Timestamps
 
 Check timestamps match your edit times:
+
 ```bash
 ls -la mobile-web/webApp/build/dist/wasmJs/productionExecutable/
 ```
@@ -123,6 +130,7 @@ ls -la mobile-web/webApp/build/dist/wasmJs/productionExecutable/
 ### 3. Console Debug Logging
 
 Add console.log output via `println()` in Kotlin/WASM:
+
 ```kotlin
 println("[DEBUG] Variable value: $myVar")
 ```
@@ -132,6 +140,7 @@ View in browser DevTools console.
 ### 4. Multiple Code Locations
 
 When fixing UI issues, search for ALL usages of the variable:
+
 ```bash
 grep -n "isBYOKMode" mobile-web/shared/src/commonMain/kotlin/ai/ciris/mobile/shared/ui/screens/SetupScreen.kt
 ```
@@ -139,6 +148,7 @@ grep -n "isBYOKMode" mobile-web/shared/src/commonMain/kotlin/ai/ciris/mobile/sha
 ### 5. docker-compose.web.yml
 
 The local docker compose uses `developmentExecutable`:
+
 ```yaml
 volumes:
   - ./mobile-web/webApp/build/dist/wasmJs/developmentExecutable:/usr/share/nginx/html:ro
@@ -172,27 +182,32 @@ SetupScreen.kt (QuickSetupStep)
 **Status: COMPLETE**
 
 The fix has been verified working in HA addon mode:
+
 - Welcome screen shows blue "Bring Your Own Key" badge
 - QuickSetup screen shows blue "Bring Your Own Key Mode" card
 - Validation shows "API key is required" (correct for BYOK) instead of "Google sign-in is required"
 - Console logs confirm: `state.setupMode=BYOK`, `state.isHAAddonMode=true`, `isBYOKMode=true`
 
 ### Cleanup Done
+
 1. Removed hardcoded `effectiveBYOKMode = true`
 2. Set `effectiveBYOKMode = isBYOKMode` for backward compatibility
 3. Removed debug console logging
 
 ### Remaining
+
 - Sync fix to upstream CIRISAgent repo (mobile-web is a conversion of CIRISAgent/client)
 
 ## Production vs Development Build
 
 **CRITICAL**: The production webpack build causes WASM runtime errors:
+
 ```
 WebAssembly.instantiate(): Import #1 "js_code" "kotlin.wasm.internal.throwJsError": function import requires a callable
 ```
 
 **Workaround**: Deploy the development build instead of production:
+
 1. Build: `./gradlew :webApp:wasmJsBrowserDevelopmentExecutableDistribution`
 2. Copy dev files to www: `scp -r mobile-web/webApp/build/dist/wasmJs/developmentExecutable/* root@HA_HOST:/addons/ciris_agent/www/`
 3. Rebuild addon: `ssh root@HA_HOST 'ha addons rebuild local_ciris_agent'`
