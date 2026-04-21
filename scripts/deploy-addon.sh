@@ -339,8 +339,47 @@ if [ -d /app/custom_components/ciris ]; then
         rm -rf /config/custom_components/ciris
         cp -r /app/custom_components/ciris /config/custom_components/
         echo \"[CIRIS STARTUP] CIRIS conversation agent v\$BUNDLED_VERSION installed to /config/custom_components/ciris\" >> /share/ciris_logs/startup.log
-        echo \"[CIRIS STARTUP] NOTE: HA restart may be required to load new component version\" >> /share/ciris_logs/startup.log
-        NEEDS_HA_RESTART=true
+
+        # Try to trigger HA to discover the new component
+        # Option 1: reload_custom_components (only works for updates, not new installs)
+        # Option 2: Trigger quick restart via supervisor
+        if [ -n \"\$SUPERVISOR_TOKEN\" ]; then
+            echo \"[CIRIS STARTUP] Triggering HA quick reload to discover new component...\" >> /share/ciris_logs/startup.log
+
+            # First try reload_custom_components (works if component was previously loaded)
+            RELOAD_RESULT=\$(curl -sf -X POST \\
+                -H \"Authorization: Bearer \$SUPERVISOR_TOKEN\" \\
+                -H \"Content-Type: application/json\" \\
+                \"http://supervisor/core/api/services/homeassistant/reload_custom_components\" 2>&1 || echo \"SKIP\")
+
+            # Check if ciris handler is now available (integration registered)
+            sleep 3
+            HANDLER_CHECK=\$(curl -sf -X POST \\
+                -H \"Authorization: Bearer \$SUPERVISOR_TOKEN\" \\
+                -H \"Content-Type: application/json\" \\
+                -d '{\"handler\": \"ciris\"}' \\
+                \"http://supervisor/core/api/config/config_entries/flow\" 2>&1 || echo \"NOT_AVAILABLE\")
+
+            if echo \"\$HANDLER_CHECK\" | grep -q '\"flow_id\"'; then
+                echo \"[CIRIS STARTUP] Component loaded successfully without restart!\" >> /share/ciris_logs/startup.log
+                # Abort this test flow
+                FLOW_ID=\$(echo \"\$HANDLER_CHECK\" | grep -o '\"flow_id\":\"[^\"]*\"' | cut -d'\"' -f4)
+                curl -sf -X DELETE \\
+                    -H \"Authorization: Bearer \$SUPERVISOR_TOKEN\" \\
+                    \"http://supervisor/core/api/config/config_entries/flow/\$FLOW_ID\" 2>/dev/null || true
+                NEEDS_HA_RESTART=false
+            else
+                echo \"[CIRIS STARTUP] Component not yet loaded - triggering HA quick restart...\" >> /share/ciris_logs/startup.log
+                # Trigger HA Core restart (faster than full system restart)
+                curl -sf -X POST \\
+                    -H \"Authorization: Bearer \$SUPERVISOR_TOKEN\" \\
+                    \"http://supervisor/core/restart\" 2>/dev/null || true
+                echo \"[CIRIS STARTUP] HA restart triggered, addon will retry auto-config on next start\" >> /share/ciris_logs/startup.log
+                NEEDS_HA_RESTART=true
+            fi
+        else
+            NEEDS_HA_RESTART=true
+        fi
     else
         echo \"[CIRIS STARTUP] CIRIS conversation agent v\$INSTALLED_VERSION already up to date\" >> /share/ciris_logs/startup.log
     fi

@@ -42,8 +42,44 @@ if [ -d "/app/custom_components/ciris" ]; then
         cp -r /app/custom_components/ciris /config/custom_components/
 
         bashio::log.info "CIRIS conversation agent v${BUNDLED_VERSION} installed."
-        bashio::log.warning "Please restart Home Assistant to enable the CIRIS integration."
-        NEEDS_HA_RESTART=true
+
+        # Try to trigger HA to discover the new component
+        if [ -n "$SUPERVISOR_TOKEN" ]; then
+            bashio::log.info "Triggering HA quick reload to discover new component..."
+
+            # First try reload_custom_components
+            curl -sf -X POST \
+                -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
+                -H "Content-Type: application/json" \
+                "http://supervisor/core/api/services/homeassistant/reload_custom_components" 2>/dev/null || true
+
+            # Check if ciris handler is now available
+            sleep 3
+            HANDLER_CHECK=$(curl -sf -X POST \
+                -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d '{"handler": "ciris"}' \
+                "http://supervisor/core/api/config/config_entries/flow" 2>&1 || echo "NOT_AVAILABLE")
+
+            if echo "$HANDLER_CHECK" | grep -q '"flow_id"'; then
+                bashio::log.info "Component loaded successfully without restart!"
+                # Abort test flow
+                FLOW_ID=$(echo "$HANDLER_CHECK" | grep -o '"flow_id":"[^"]*"' | cut -d'"' -f4)
+                curl -sf -X DELETE \
+                    -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
+                    "http://supervisor/core/api/config/config_entries/flow/$FLOW_ID" 2>/dev/null || true
+                NEEDS_HA_RESTART=false
+            else
+                bashio::log.info "Component not yet loaded - triggering HA quick restart..."
+                curl -sf -X POST \
+                    -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
+                    "http://supervisor/core/restart" 2>/dev/null || true
+                bashio::log.info "HA restart triggered, addon will retry auto-config on next start"
+                NEEDS_HA_RESTART=true
+            fi
+        else
+            NEEDS_HA_RESTART=true
+        fi
     else
         bashio::log.info "CIRIS conversation agent v${BUNDLED_VERSION} already installed."
     fi
