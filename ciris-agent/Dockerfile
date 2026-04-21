@@ -44,14 +44,15 @@ RUN echo "Wheel build: ${BUILD_TIMESTAMP}" && \
 # The glibc build will fail with "symbol not found" errors on Alpine
 COPY lib/libciris_verify.so /usr/lib/ciris/libciris_verify.so
 
-# Copy web assets to gui_static where the agent expects them
-# The agent looks for gui_static in the ciris_engine package directory
+# Copy WASM web assets to wasm_static where the agent expects them
+# As of commit 72bd4abbe, the agent checks wasm_static/ first for WASM deployments
+# WASM takes priority over gui_static (Next.js) for HA addon mode
 COPY www/ /tmp/www/
 RUN CIRIS_PKG=$(python3 -c "import ciris_engine; print(ciris_engine.__path__[0])") && \
-    mkdir -p "$CIRIS_PKG/gui_static" && \
-    cp -r /tmp/www/* "$CIRIS_PKG/gui_static/" && \
+    mkdir -p "$CIRIS_PKG/wasm_static" && \
+    cp -r /tmp/www/* "$CIRIS_PKG/wasm_static/" && \
     rm -rf /tmp/www && \
-    echo "GUI static assets installed to: $CIRIS_PKG/gui_static"
+    echo "WASM static assets installed to: $CIRIS_PKG/wasm_static"
 
 # Copy CIRIS conversation agent custom component
 # This will be installed to /config/custom_components/ciris/ on startup
