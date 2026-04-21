@@ -98,7 +98,7 @@ ADDON_SLUG="local_ciris_agent"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 LOCAL_ADDON_DIR="${REPO_ROOT}/ciris-agent"
-VERSION="6.1.1"
+VERSION="6.2.0"
 
 # Parse arguments
 FRESH_INSTALL=false
@@ -319,6 +319,9 @@ mkdir -p /share/ciris_logs
     sleep 5
 done) &
 
+# Track if HA needs restart (set by component install)
+NEEDS_HA_RESTART=false
+
 # Install CIRIS conversation agent custom component (eliminates need for HACS)
 # This copies the bundled custom_components/ciris to HA's config directory
 echo \"[CIRIS STARTUP] Installing CIRIS conversation agent...\" >> /share/ciris_logs/startup.log
@@ -336,8 +339,8 @@ if [ -d /app/custom_components/ciris ]; then
         rm -rf /config/custom_components/ciris
         cp -r /app/custom_components/ciris /config/custom_components/
         echo \"[CIRIS STARTUP] CIRIS conversation agent v\$BUNDLED_VERSION installed to /config/custom_components/ciris\" >> /share/ciris_logs/startup.log
-        echo \"[CIRIS STARTUP] ACTION REQUIRED: Restart Home Assistant to load the CIRIS integration\" >> /share/ciris_logs/startup.log
-        echo \"[CIRIS STARTUP] Then go to Settings > Devices & Services > Add Integration > CIRIS\" >> /share/ciris_logs/startup.log
+        echo \"[CIRIS STARTUP] NOTE: HA restart may be required to load new component version\" >> /share/ciris_logs/startup.log
+        NEEDS_HA_RESTART=true
     else
         echo \"[CIRIS STARTUP] CIRIS conversation agent v\$INSTALLED_VERSION already up to date\" >> /share/ciris_logs/startup.log
     fi
@@ -358,6 +361,71 @@ if [ -n \"\$SUPERVISOR_TOKEN\" ]; then
     echo \"[CIRIS STARTUP] Panel enable result: \$PANEL_RESULT\" >> /share/ciris_logs/startup.log
 else
     echo \"[CIRIS STARTUP] WARNING: SUPERVISOR_TOKEN not set, cannot enable panel\" >> /share/ciris_logs/startup.log
+fi
+
+# Auto-configure CIRIS integration in background (after agent starts)
+# This eliminates manual "Add Integration" steps
+# Runs in background because the agent must be healthy before config flow validation works
+# Skip if HA restart is needed (component not loaded yet)
+if [ -n \"\$SUPERVISOR_TOKEN\" ] && [ \"\$NEEDS_HA_RESTART\" != \"true\" ]; then
+    (
+        # Wait for agent to be healthy (up to 60 seconds)
+        echo \"[CIRIS AUTO-CONFIG] Waiting for agent to start...\" >> /share/ciris_logs/startup.log
+        for i in \$(seq 1 30); do
+            if curl -sf http://localhost:8099/v1/system/health >/dev/null 2>&1; then
+                echo \"[CIRIS AUTO-CONFIG] Agent is healthy, proceeding with auto-config\" >> /share/ciris_logs/startup.log
+                break
+            fi
+            sleep 2
+        done
+
+        # Check if CIRIS integration already exists
+        EXISTING=\$(curl -sf \\
+            -H \"Authorization: Bearer \$SUPERVISOR_TOKEN\" \\
+            \"http://supervisor/core/api/config/config_entries/entry\" 2>/dev/null | \\
+            grep -o '\"domain\":\"ciris\"' || true)
+
+        if [ -z \"\$EXISTING\" ]; then
+            echo \"[CIRIS AUTO-CONFIG] CIRIS integration not found, attempting auto-configure...\" >> /share/ciris_logs/startup.log
+
+            # Start config flow
+            FLOW_RESULT=\$(curl -sf -X POST \\
+                -H \"Authorization: Bearer \$SUPERVISOR_TOKEN\" \\
+                -H \"Content-Type: application/json\" \\
+                -d '{\"handler\": \"ciris\"}' \\
+                \"http://supervisor/core/api/config/config_entries/flow\" 2>/dev/null || echo \"\")
+
+            echo \"[CIRIS AUTO-CONFIG] Flow init result: \$FLOW_RESULT\" >> /share/ciris_logs/startup.log
+
+            if [ -n \"\$FLOW_RESULT\" ]; then
+                FLOW_ID=\$(echo \"\$FLOW_RESULT\" | grep -o '\"flow_id\":\"[^\"]*\"' | cut -d'\"' -f4)
+
+                if [ -n \"\$FLOW_ID\" ]; then
+                    echo \"[CIRIS AUTO-CONFIG] Completing flow \$FLOW_ID with defaults...\" >> /share/ciris_logs/startup.log
+
+                    # Complete the flow with default settings
+                    COMPLETE_RESULT=\$(curl -sf -X POST \\
+                        -H \"Authorization: Bearer \$SUPERVISOR_TOKEN\" \\
+                        -H \"Content-Type: application/json\" \\
+                        -d '{\"api_url\": \"http://local-ciris_agent:8099\", \"name\": \"CIRIS\"}' \\
+                        \"http://supervisor/core/api/config/config_entries/flow/\$FLOW_ID\" 2>/dev/null || echo \"\")
+
+                    echo \"[CIRIS AUTO-CONFIG] Flow complete result: \$COMPLETE_RESULT\" >> /share/ciris_logs/startup.log
+
+                    if echo \"\$COMPLETE_RESULT\" | grep -q '\"type\":\"create_entry\"'; then
+                        echo \"[CIRIS AUTO-CONFIG] SUCCESS: CIRIS integration auto-configured!\" >> /share/ciris_logs/startup.log
+                    else
+                        echo \"[CIRIS AUTO-CONFIG] Config flow did not create entry (may need HA restart first)\" >> /share/ciris_logs/startup.log
+                    fi
+                fi
+            fi
+        else
+            echo \"[CIRIS AUTO-CONFIG] CIRIS integration already configured.\" >> /share/ciris_logs/startup.log
+        fi
+    ) &
+elif [ -n \"\$SUPERVISOR_TOKEN\" ] && [ \"\$NEEDS_HA_RESTART\" = \"true\" ]; then
+    echo \"[CIRIS AUTO-CONFIG] Skipping auto-config (HA restart needed to load new component)\" >> /share/ciris_logs/startup.log
+    echo \"[CIRIS AUTO-CONFIG] After HA restart, restart this addon to auto-configure integration\" >> /share/ciris_logs/startup.log
 fi
 
 # Launch CIRIS Agent with API adapter

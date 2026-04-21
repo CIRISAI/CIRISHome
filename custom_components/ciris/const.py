@@ -18,7 +18,7 @@ CONF_CUSTOM_INSTRUCTIONS = "custom_instructions"
 CONF_WAKE_WORD = "wake_word"
 
 # Defaults
-DEFAULT_API_URL = "http://localhost:8080"
+DEFAULT_API_URL = "http://local-ciris_agent:8099"
 DEFAULT_TIMEOUT = 30
 DEFAULT_CHANNEL = "homeassistant"
 DEFAULT_LANGUAGE = "en"
