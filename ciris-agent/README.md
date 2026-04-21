@@ -9,10 +9,10 @@
 ### Option 1: Add Repository (Recommended)
 
 1. In Home Assistant, go to **Settings** > **Add-ons** > **Add-on Store**
-2. Click the **⋮** menu (top right) > **Repositories**
+2. Click the **...** menu (top right) > **Repositories**
 3. Add: `https://github.com/CIRISAI/CIRISHome`
 4. Find **CIRIS Agent** in the store and click **Install**
-5. Start the addon and open the web UI from the sidebar
+5. Start the addon - CIRIS appears in your sidebar automatically
 
 ### Option 2: Local Installation
 
@@ -27,17 +27,15 @@ cd /addons/ciris_agent
 # Download latest release
 curl -L https://github.com/CIRISAI/CIRISHome/releases/latest/download/ciris-agent-addon.tar.gz | tar xz
 
-# Reload addon store
+# Reload and install
 ha addons reload
-
-# Install from local addons
 ha addons install local_ciris_agent
 ha addons start local_ciris_agent
 ```
 
 ## First Run Setup
 
-After installation, CIRIS will guide you through setup:
+After installation, CIRIS guides you through setup:
 
 1. **Open the CIRIS panel** from the Home Assistant sidebar
 2. **Choose your LLM provider**:
@@ -46,7 +44,33 @@ After installation, CIRIS will guide you through setup:
    - **Local Ollama** - Self-hosted models
    - **Jetson** - Local Llama on Jetson Nano
 3. **Enter your API key** (or configure local endpoint)
-4. **Complete setup** - CIRIS will verify connectivity
+4. **Complete setup** - CIRIS verifies connectivity
+
+**What happens automatically:**
+- CIRIS conversation agent custom component installs to `/config/custom_components/ciris`
+- CIRIS integration auto-configures via HA REST API
+- HA restarts if needed to load new component (handled automatically)
+
+Just select CIRIS as your voice assistant in **Settings** > **Voice Assistants**!
+
+## Voice Assistant Integration
+
+**Fully Automatic!** After addon startup:
+
+1. **Custom component** auto-installs to Home Assistant
+2. **CIRIS integration** auto-configures via REST API
+3. Just go to **Settings** > **Voice Assistants** and select CIRIS
+
+If this is a fresh install, HA may restart automatically to load the component. The addon handles everything - no manual steps required.
+
+**Manual Setup (if needed):**
+
+If auto-config didn't run, you can manually add the integration:
+1. Go to **Settings** > **Devices & Services** > **Add Integration**
+2. Search for **CIRIS** and add it
+3. Use API URL: `http://local-ciris_agent:8099`
+
+Now you can use CIRIS with Voice PE pucks, the HA mobile app, or any HA voice interface.
 
 ## Features
 
@@ -54,26 +78,18 @@ After installation, CIRIS will guide you through setup:
 - **Multi-Modal AI** - Vision, audio, and sensor integration
 - **100% Local Option** - Use Jetson Nano for complete privacy
 - **Home Assistant Native** - Full HA API integration
-- **Conversation Agent** - Use CIRIS as your HA voice assistant
+- **Auto-Install** - Conversation agent installs automatically
 
-## Conversation Agent Integration
+## Configuration Options
 
-After setup, enable CIRIS as your Home Assistant conversation agent:
+Configure via the Options tab in the addon:
 
-1. Go to **Settings** > **Devices & Services** > **Add Integration**
-2. Search for **CIRIS** and add it
-3. Go to **Settings** > **Voice Assistants**
-4. Set CIRIS as your conversation agent
-
-Now you can use CIRIS with Voice PE pucks, the HA mobile app, or any HA voice interface.
-
-## Configuration
-
-| Option          | Description                           |
-| --------------- | ------------------------------------- |
-| `ingress_panel` | Show CIRIS in sidebar (default: true) |
-
-All configuration is done through the web UI wizard. No manual YAML editing required.
+| Option                 | Description                              | Default        |
+| ---------------------- | ---------------------------------------- | -------------- |
+| Room Type              | adult_room, kids_room, shared_space, etc | shared_space   |
+| Safety Level           | unrestricted, family_friendly, kids_safe | family_friendly|
+| Response Style         | normal, simplified, detailed, brief      | normal         |
+| Custom Instructions    | Additional context for the AI            | (empty)        |
 
 ## Supported Architectures
 
@@ -85,6 +101,10 @@ All configuration is done through the web UI wizard. No manual YAML editing requ
 **View Logs:**
 
 ```bash
+# Quick log check
+ssh root@homeassistant.local 'tail -50 /share/ciris_logs/latest.log'
+
+# Or via HA CLI
 ha addons logs local_ciris_agent
 ```
 
@@ -94,18 +114,13 @@ ha addons logs local_ciris_agent
 ha addons restart local_ciris_agent
 ```
 
-**Check Status:**
-
-```bash
-ha addons info local_ciris_agent
-```
-
 **Logs Directory:**
-Addon logs are copied to `/share/ciris_logs/` for easy access:
+
+Addon logs are available in `/share/ciris_logs/`:
 
 - `latest.log` - Main application log
 - `startup.log` - Startup sequence
-- `env.txt` - Current environment (API keys redacted)
+- `incidents.log` - Error tracking
 
 ## License
 
