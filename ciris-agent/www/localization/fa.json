@@ -4,7 +4,9 @@
     "language_name": "فارسی",
     "direction": "rtl",
     "version": "2.3.4",
-    "translators": ["Claude AI"],
+    "translators": [
+      "Claude AI"
+    ],
     "last_updated": "2026-04-07",
     "review_status": "draft"
   },
